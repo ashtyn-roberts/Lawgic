@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -31,6 +32,11 @@ class _HomeTabState extends State<HomeTab> {
   Color get primaryLavender => const Color(0xFFF4F0FB);
   Color get accentPurple => const Color(0xFFB48CFB);
   Color get textDark => const Color(0xFF3D3A50);
+
+  //user sign out
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +76,12 @@ class _HomeTabState extends State<HomeTab> {
               const PopupMenuDivider(),
               const PopupMenuItem(value: 'Sign Out', child: Text('Sign Out')),
             ],
+            onSelected: (value) {
+              if (value == 'Sign Out') {
+                _signOut();
+              }
+              //navigation/logic for other menu items here
+            },
           ),
         ],
       ),
