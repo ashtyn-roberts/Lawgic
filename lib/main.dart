@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-// IMPORTANT: This file must be located in the main lib/ directory
 import 'firebase_options.dart'; 
-
-// IMPORTANT: These screens must be located in lib/screens/
 import 'screens/auth_gate.dart'; 
 import 'screens/home_screen.dart'; 
 
 
 void main() async {
-  // Required for Firebase to initialize before runApp
   WidgetsFlutterBinding.ensureInitialized(); 
 
-  // Initialize Firebase using the generated options file
+  // initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -31,11 +26,9 @@ class MyApp extends StatelessWidget {
       title: 'SW Development App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // Use a color scheme for a modern look
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
         
-        // Define standard styles for the whole app
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50), // Full width button
@@ -53,13 +46,13 @@ class MyApp extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
         ),
       ),
-      // AuthPage is the primary screen shown at launch
       home: const AuthPage(), 
     );
   }
 }
 
-/// Listens to Firebase Auth state changes and directs the user to the correct screen.
+// listen to Firebase Auth state changes
+// directs the user to correct screen
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});
 
@@ -74,14 +67,14 @@ class AuthPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // If snapshot has data (User object), they are logged in.
+        // if snapshot has data then they're logged in
         if (snapshot.hasData) {
           return const HomeScreen();
         } 
         
-        // If snapshot has no data, they are logged out.
+        // if snapshot has no data then they're logged out.
         else {
-          // AuthGate handles the choice between Sign In and Sign Up screens.
+          // AuthGate handles the choice between sign in and sign up screens
           return const AuthGate();
         }
       },

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-
-// CORRECTED IMPORTS: Assuming signin_screen.dart and signup_screen.dart 
-// are located directly in the lib/screens/ directory alongside auth_gate.dart.
 import 'signin_screen.dart'; 
 import 'signup_screen.dart'; 
 
-/// Toggles between the SignInScreen and SignUpScreen, which are displayed
-/// when the user is not authenticated.
+// toggles btwn the sigin_screen and signup_screen
+// displayed when the user is not authenticated
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
@@ -15,7 +12,7 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
-  // State to track which view is currently shown (true = Sign In, false = Sign Up)
+  // track which view is currently shown (true = sign in, false = sign up)
   bool showSignIn = true;
 
   void toggleView() {
@@ -26,9 +23,6 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    // Note: The 'const' keyword has been removed from SignInScreen and SignUpScreen 
-    // because the 'onTap' (toggleView) callback is a non-constant function 
-    // that changes the StatefulWidget's state.
     if (showSignIn) {
       return SignInScreen(onTap: toggleView);
     } else {

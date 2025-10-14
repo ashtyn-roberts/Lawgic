@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class SignInScreen extends StatefulWidget {
   final VoidCallback onTap;
-  // Constructor must be const to match AuthGate's usage
   const SignInScreen({super.key, required this.onTap});
 
   @override
@@ -68,7 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SW Development Sign In'),
+        title: const Text('Lawgic Sign In'),
         centerTitle: true,
       ),
       body: Center(
@@ -86,7 +85,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Email Input
+              // email input
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -98,7 +97,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Input
+              // password input
               TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -110,7 +109,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Forgot Password Link
+              // forgot password link
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
@@ -127,7 +126,7 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Error Message
+              // error message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
@@ -138,7 +137,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
 
-              // Sign In Button
+              // sign in button
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
@@ -147,7 +146,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
               const SizedBox(height: 24),
 
-              // Switch to Sign Up
+              // switch to sign up
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

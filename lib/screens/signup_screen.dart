@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpScreen extends StatefulWidget {
   final VoidCallback onTap;
-  // IMPORTANT: Constructor must be const to match AuthGate's usage
   const SignUpScreen({super.key, required this.onTap});
 
   @override
@@ -18,7 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
   bool _isLoading = false;
 
-  /// Handles user creation in Firebase Auth and profile creation in Firestore.
+  // user creation in Firebase Auth and profile creation in Firestore
   Future<void> _signUp() async {
     // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _usernameController.text.isEmpty) {
@@ -32,14 +31,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // 1. Create the user in Firebase Auth
+      // create the user in Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // 2. Create a user profile document in Firestore
-      // This is crucial for retrieving the 'username' on the Home/Profile tab.
+      // create a user profile document in Firestore
       await _createFirestoreUserProfile(userCredential.user!);
       
     } on FirebaseAuthException catch (e) {
@@ -68,10 +66,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  /// Saves the user's profile data (username and email) to the 'users' collection.
+  /// save user's username + email to the users collection
   Future<void> _createFirestoreUserProfile(User user) async {
     final firestore = FirebaseFirestore.instance;
-    // Uses the 'users' collection protected by your security rules
+    // users collection protected by security rules
     await firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'username': _usernameController.text.trim(),
@@ -92,7 +90,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SW Development Sign Up'),
+        title: const Text('Lawgic Sign Up'),
         centerTitle: true,
       ),
       body: Center(
@@ -110,7 +108,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Username Input
+              // username input
               TextField(
                 controller: _usernameController,
                 keyboardType: TextInputType.text,
@@ -122,7 +120,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Email Input
+              // email input
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -134,7 +132,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Input
+              // password input
               TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -146,7 +144,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Error Message
+              // error message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
@@ -157,7 +155,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
 
-              // Sign Up Button
+              // sign up button
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
@@ -166,7 +164,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
               const SizedBox(height: 24),
 
-              // Switch to Sign In
+              // switch to sign in
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
