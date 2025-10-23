@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+
 
 class MapTab extends StatefulWidget {
   const MapTab({super.key});
@@ -9,7 +12,12 @@ class MapTab extends StatefulWidget {
 class _MapTabState extends State<MapTab> {
   Color? get primaryLavender => null;
   Color? get textDark => null;
+  late GoogleMapController mapController;
+  final LatLng _center = const LatLng(30.445966, -91.1879593);
 
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +54,13 @@ class _MapTabState extends State<MapTab> {
           ),
         ],
       ),
-    
+      
       body: Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         
         children: [
+          
           Text(
             'Voting Locations',
             style: TextStyle(
@@ -59,14 +68,18 @@ class _MapTabState extends State<MapTab> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 32),
-          Container(
-            width:400,
-            height:350,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              border:Border.all(color: Colors.black, width: 2)
-            ),),
+          SizedBox(
+            height: 350,
+            width: double.infinity,
+            child: GoogleMap( 
+              onMapCreated: _onMapCreated,
+              initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: 11.0,
+            )
+          ),
+          ),
+          
           SizedBox(height: 20),
           Text(
             'Welcome *Username*',
