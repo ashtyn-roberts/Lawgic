@@ -14,6 +14,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _firstnameController = TextEditingController();
+  final _lastnameController = TextEditingController();
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -74,6 +76,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       'uid': user.uid,
       'username': _usernameController.text.trim(),
       'email': user.email,
+      'first_name': _firstnameController.text.trim(), // users collection first name 
+      'last_name': _lastnameController.text.trim(),
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -83,6 +87,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _usernameController.dispose();
+    _firstnameController.dispose();
+    _lastnameController.dispose();
     super.dispose();
   }
 
@@ -108,13 +114,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 40),
 
-              // username input
+              // first_name input
               TextField(
-                controller: _usernameController,
+                controller: _firstnameController,
                 keyboardType: TextInputType.text,
                 decoration: const InputDecoration(
-                  labelText: 'Username',
-                  hintText: 'JohnDoe',
+                  labelText: 'First Name',
+                  hintText: 'First Name',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // last_name input
+              TextField(
+                controller: _lastnameController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Last Name',
+                  hintText: 'Last Name',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
@@ -132,6 +150,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               const SizedBox(height: 16),
 
+              // username input
+              TextField(
+                controller: _usernameController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  hintText: 'JohnDoe',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              
+
               // password input
               TextField(
                 controller: _passwordController,
@@ -143,6 +175,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+
+
 
               // error message
               if (_errorMessage != null)
