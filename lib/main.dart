@@ -69,7 +69,10 @@ class AuthPage extends StatelessWidget {
 
         // if snapshot has data then they're logged in
         if (snapshot.hasData) {
-          return const HomeScreen();
+          return HomeScreen(
+            currentParish: 'EAST BATON ROUGE', 
+            currentElectionDate: '2025-11-15',
+          );
         } 
         
         // if snapshot has no data then they're logged out.

@@ -3,9 +3,13 @@ import 'home_tab.dart';
 import 'profile_tab.dart';
 import 'map_tab.dart';
 import 'calendar_tab.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'bill_details_tab.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String currentParish;
+  final String currentElectionDate;
+  const HomeScreen({super.key, required this.currentParish, required this.currentElectionDate});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -13,13 +17,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  late List<Widget> _screens;
 
-  final List<Widget> _screens = [
-    const HomeTab(),       // index 0 - Home
-    const CalendarTab(),   // index 1 - Calendar  
-    const MapTab(),        // index 2 - Map
-    const ProfileTab(),    // index 3 - Profile
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeTab(
+        currentParish: widget.currentParish,
+        currentElectionDate: widget.currentElectionDate,
+      ),
+      const CalendarTab(),
+      const MapTab(),
+      const ProfileTab(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
