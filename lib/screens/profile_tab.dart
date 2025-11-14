@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lawgic/screens/auth_gate.dart';
 
 // Profile Tab Screen
 class ProfileTab extends StatefulWidget {
@@ -75,7 +76,18 @@ Widget build(BuildContext context) {
         .snapshots(),                // Listen for real-time updates to this document
     builder: (context, snapshot) {
       // Show a loading spinner while Firestore data is loading
-      if (!snapshot.hasData) {
+
+      if(snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      if (!snapshot.hasData || !snapshot.data!.exists) {
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AuthGate(),));
+        });
         return const Center(child: CircularProgressIndicator());
       }
 
