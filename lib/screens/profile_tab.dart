@@ -143,8 +143,21 @@ Widget build(BuildContext context) {
                 const PopupMenuItem(
                     value: 'Sign Out', child: Text('Sign Out')),
               ],
-            ),
-          ],
+            onSelected: (value) {
+              if (value == 'Sign Out') {
+                _signOut();
+              } else if (value == 'Edit Profile') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditProfile(billId: ''),
+                  ),
+                );
+              }
+            },
+            )
+          
+          ]
         ),
 
         // ---------- Drawer (Side Menu) ----------
@@ -376,6 +389,15 @@ Widget build(BuildContext context) {
   );
 }
 
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const AuthGate()),
+    );
+  }
 
   Widget _drawerItem(IconData icon, String title) {
     return ListTile(
