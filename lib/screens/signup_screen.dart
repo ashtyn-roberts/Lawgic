@@ -22,11 +22,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // user creation in Firebase Auth and profile creation in Firestore
   Future<void> _signUp() async {
     // Basic validation
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _usernameController.text.isEmpty) {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _usernameController.text.isEmpty|| _firstnameController.text.isEmpty || _lastnameController.text.isEmpty) {
+      if (!mounted) return;
       setState(() => _errorMessage = 'All fields are required.');
       return;
     }
-
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -54,14 +55,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
        else {
         message = 'Sign Up Failed: ${e.message}';
       }
+      if (!mounted) return;
       setState(() {
         _errorMessage = message;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'An unexpected error occurred: $e';
       });
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
