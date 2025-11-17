@@ -1,6 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SignUpScreen extends StatefulWidget {
   final VoidCallback onTap;
@@ -16,6 +19,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _usernameController = TextEditingController();
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
+  Uint8List? _image;
   String? _errorMessage;
   bool _isLoading = false;
 
@@ -71,17 +75,59 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
     }
   }
+  // creates imagepicker that allows users to pick an image from a source 
+  Future<Uint8List?> pickImage(ImageSource source ) async{
+  final ImagePicker imagePicker = ImagePicker();
+  XFile? file = await imagePicker.pickImage(source: source);
+
+  if(file != null) {
+    return await file.readAsBytes();
+  }
+  print('No Image Seleted');
+  return null;
+}
+
+// uses imagepicker to allow users to select an image from device gallery 
+  Future<void> selectImage() async{
+    Uint8List? img = await pickImage(ImageSource.gallery);
+    if (img != null) {
+      if (!mounted) return;
+      setState(() {
+        _image = img;
+      });
+    }
+
+  }
+
+  // stores image to firebase storage and returns the download url
+  Future<String> uploadImage(String uid, Uint8List file) async {
+    Reference ref =  FirebaseStorage.instance.ref().child('profilePics').child('$uid.jpg');
+    UploadTask uploadTask = ref.putData(file);
+    TaskSnapshot snapshot = await uploadTask;
+    String downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
+  }
+
 
   /// save user's username + email to the users collection
   Future<void> _createFirestoreUserProfile(User user) async {
     final firestore = FirebaseFirestore.instance;
     // users collection protected by security rules
+
+    // upload profile image if avalilable if not it will be null(empty)
+    String? imageUrl;
+    if (_image != null ){
+       imageUrl = await uploadImage(user.uid, _image!); // download url is stored in imageUrl
+    }
+
+    
     await firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'username': _usernameController.text.trim(),
       'email': user.email,
       'first_name': _firstnameController.text.trim(), // users collection first name 
       'last_name': _lastnameController.text.trim(),
+      'ProfilePicUrl': imageUrl, // can be null if no image was selected
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -117,6 +163,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
               ),
               const SizedBox(height: 40),
+
+              // profile image selection
+Center(
+  child: Stack(
+    clipBehavior: Clip.none,
+    children: [
+      CircleAvatar(
+        radius: 64,
+        backgroundImage: _image != null
+            ? MemoryImage(_image!)  // Display selected image
+            : const AssetImage('images/sleepyjoe.jpg') as ImageProvider,
+      ),
+      Positioned(
+        bottom: -10,
+        right: -10,
+        child: IconButton(
+          icon: const Icon(Icons.add_a_photo),
+          onPressed: selectImage,
+        ),
+      ),
+    ],
+  ),
+),
+
+
+              const SizedBox(height: 24),
+
 
               // first_name input
               TextField(
