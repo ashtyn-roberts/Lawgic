@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../screens/profile_tab.dart';
+import '../screens/bill_model.dart';
+import '../services/legiScan.dart';
+import '../services/firestore.dart';
+import '../screens/bill_summarizer.dart';
+
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
@@ -9,14 +15,11 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  final List<Map<String, dynamic>> bills = [
-    {'id': '192.123', 'summary': '1 sentence summary here', 'color': const Color(0xFFB48CFB), 'type': 'Healthcare'},
-    {'id': '1930.423', 'summary': '1 sentence summary here', 'color': const Color(0xFFF28B82), 'type': 'Taxes'},
-    {'id': '138.45', 'summary': '1 sentence summary here', 'color': const Color(0xFF81C995), 'type': 'Education'},
-    {'id': '56.786', 'summary': '1 sentence summary here', 'color': const Color(0xFFFB9DA7), 'type': 'Taxes'},
-    {'id': '4857.345', 'summary': '1 sentence summary here', 'color': const Color(0xFFFFC47D), 'type': 'Energy'},
-    {'id': '7876.5', 'summary': '1 sentence summary here', 'color': const Color(0xFF9AC8EB), 'type': 'Crime'},
-  ];
+  final LegiScanService _legiScanService = LegiScanService();
+  final FirestoreService _firestoreService = FirestoreService();
+  
+  List<Bill> _allBills = [];
+  bool _isLoading = true;
 
   final List<Map<String, dynamic>> categories = [
     {'label': 'All', 'color': Colors.grey},
@@ -33,6 +36,39 @@ class _HomeTabState extends State<HomeTab> {
   Color get accentPurple => const Color(0xFFB48CFB);
   Color get textDark => const Color(0xFF3D3A50);
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBills();
+  }
+
+  Future<void> _loadBills() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Fetch bills from LegiScan
+      final newBills = await _legiScanService.fetchLouisianaBills();
+
+      // Optionally fetch saved bills from Firestore (not yet merged here)
+      final savedBills = await _firestoreService.getAllSavedBills();
+      // TODO: merge newBills + savedBills if you want “saved” indicators, etc.
+
+      setState(() {
+        _allBills = newBills;
+      });
+    } catch (e) {
+      // You might later show a SnackBar or dialog instead of just printing
+      debugPrint("Error loading bills: $e");
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   //user sign out
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
@@ -41,9 +77,8 @@ class _HomeTabState extends State<HomeTab> {
   @override
   Widget build(BuildContext context) {
     // Filter bills based on selected category
-    final filteredBills = selectedCategory == 'All'
-        ? bills
-        : bills.where((b) => b['type'] == selectedCategory).toList();
+    final List<Bill> filteredBills =
+        selectedCategory == 'All' ? _allBills : _allBills; // TODO: filter by type when added
 
     return Scaffold(
       backgroundColor: primaryLavender,
@@ -79,6 +114,15 @@ class _HomeTabState extends State<HomeTab> {
             onSelected: (value) {
               if (value == 'Sign Out') {
                 _signOut();
+              } else if (value == 'Account') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileTab(),
+                  ),
+                );
+              } else if (value == 'Registration Status') {
+                // TODO: implement registration status page/dialog
               }
               //navigation/logic for other menu items here
             },
@@ -180,77 +224,109 @@ class _HomeTabState extends State<HomeTab> {
 
             // Bills list
             Expanded(
-              child: ListView.builder(
-                itemCount: filteredBills.length,
-                itemBuilder: (context, index) {
-                  final bill = filteredBills[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BillDetailPage(billId: bill['id']),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12.withOpacity(0.05),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredBills.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No bills found.',
+                            style: TextStyle(color: Colors.grey[700]),
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: bill['color'],
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: ListTile(
-                              title: Text(
-                                'Bill ${bill['id']}',
-                                style: TextStyle(
-                                  color: textDark,
-                                  fontWeight: FontWeight.w600,
+                        )
+                      : ListView.builder(
+                          itemCount: filteredBills.length,
+                          itemBuilder: (context, index) {
+                            final bill = filteredBills[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        BillSummarizerScreen(
+                                      bill: bill,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.symmetric(vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius:
+                                      BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black12
+                                          .withOpacity(0.05),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Colored stripe – using accentPurple for now
+                                    Container(
+                                      width: 6,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                        color: accentPurple,
+                                        borderRadius:
+                                            const BorderRadius.only(
+                                          topLeft: Radius.circular(16),
+                                          bottomLeft:
+                                              Radius.circular(16),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: ListTile(
+                                        title: Text(
+                                          bill.billNumber,
+                                          style: TextStyle(
+                                            color: textDark,
+                                            fontWeight:
+                                                FontWeight.w600,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          bill.geminiSummary ??
+                                              bill.latestAction,
+                                          maxLines: 2,
+                                          overflow:
+                                              TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                              color:
+                                                  Colors.grey[700]),
+                                        ),
+                                        trailing: IconButton(
+                                          icon: const Icon(
+                                            Icons
+                                                .chat_bubble_outline,
+                                            color: Colors.black54,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    CommentsPage(
+                                                  billId: bill.billId,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              subtitle: Text(
-                                bill['summary'],
-                                style: TextStyle(color: Colors.grey[700]),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.chat_bubble_outline, color: Colors.black54),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CommentsPage(billId: bill['id']),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),

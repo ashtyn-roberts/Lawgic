@@ -10,10 +10,12 @@ class MapTab extends StatefulWidget {
   State<MapTab> createState() => _MapTabState();
 }
 class _MapTabState extends State<MapTab> {
-  Color? get primaryLavender => null;
-  Color? get textDark => null;
   late GoogleMapController mapController;
   final LatLng _center = const LatLng(30.445966, -91.1879593);
+
+  Color get primaryLavender => const Color(0xFFF4F0FB);
+  Color get accentPurple => const Color(0xFFB48CFB);
+  Color get textDark => const Color(0xFF3D3A50);
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -22,6 +24,7 @@ class _MapTabState extends State<MapTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: primaryLavender,
       appBar: AppBar(
         backgroundColor: primaryLavender,
         elevation: 0,
@@ -40,27 +43,46 @@ class _MapTabState extends State<MapTab> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(Icons.person_outline, color: textDark),
-            color: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'Account', child: Text('Account')),
-              const PopupMenuItem(value: 'Registration Status', child: Text('Registration Status')),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: 'Sign Out', child: Text('Sign Out')),
-            ],
+      ),
+
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
           ),
-        ],
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration:
+                  BoxDecoration(color: accentPurple.withOpacity(0.15)),
+              child: Center(
+                child: Text(
+                  'Menu',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            _drawerItem(Icons.settings_outlined, 'Settings'),
+            _drawerItem(Icons.notifications_outlined, 'Notifications'),
+            _drawerItem(Icons.history, 'Recently Viewed'),
+            _drawerItem(Icons.info_outline, 'About'),
+          ],
+        ),
       ),
       
       body: Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
           Text(
             'Voting Locations',
             style: TextStyle(
@@ -68,6 +90,7 @@ class _MapTabState extends State<MapTab> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 12),
           SizedBox(
             height: 350,
             width: double.infinity,
@@ -78,14 +101,15 @@ class _MapTabState extends State<MapTab> {
               zoom: 11.0,
             )
           ),
-          ),
+        ),
           
-          SizedBox(height: 20),
+        const SizedBox(height: 20),
           Text(
             'Welcome *Username*',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: textDark,
             ),
           ),
           Text(
@@ -109,16 +133,27 @@ class _MapTabState extends State<MapTab> {
               color: Colors.grey,
             ),
           ),
-          SizedBox(height: 32),
+          const SizedBox(height: 32),
           Text(
             'Open in Google Maps',
             style: TextStyle(
               fontSize : 24,
               color: Colors.red[600],
-            ))
+              decoration: TextDecoration.underline,
+            ),
+          ),
         ],
       ),
-    ), 
+     ), 
+    );
+  }
+  Widget _drawerItem(IconData icon, String title) {
+    return ListTile(
+      leading: Icon(icon, color: textDark),
+      title: Text(title, style: TextStyle(color: textDark)),
+      onTap: () {
+        // TODO: implement navigation for map drawer
+      },
     );
   }
 }
