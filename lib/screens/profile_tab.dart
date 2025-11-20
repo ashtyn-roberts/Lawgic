@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lawgic/screens/auth_gate.dart';
+import 'package:lawgic/screens/editprofile_screen.dart';
 
 // Profile Tab Screen
 class ProfileTab extends StatefulWidget {
@@ -69,10 +70,16 @@ class _ProfileTab extends State<ProfileTab> {
 @override
 Widget build(BuildContext context) {
   // Use StreamBuilder to listen in real-time to the current user's Firestore document
+  final user = FirebaseAuth.instance.currentUser;
+
+  // if no user is signed in, redirect to AuthGate
+  if (user == null){
+    return const AuthGate();
+  }
   return StreamBuilder<DocumentSnapshot>(
     stream: FirebaseFirestore.instance
         .collection('users')         // Access the 'users' collection in Firestore
-        .doc(FirebaseAuth.instance.currentUser!.uid)       // Target the document of the currently signed-in user
+        .doc(user.uid)       // Target the document of the currently signed-in user
         .snapshots(),                // Listen for real-time updates to this document
     builder: (context, snapshot) {
       // Show a loading spinner while Firestore data is loading
@@ -94,6 +101,7 @@ Widget build(BuildContext context) {
       // Once Firestore returns data, extract it into a usable variable
       final userData = snapshot.data!.data() as Map<String, dynamic>;
 
+      final profilePic = safeget(userData, 'ProfilePicUrl', fallback: '');
       // Filter bills based on the selected category
       // If 'All' is selected, show all bills; otherwise filter by the selected type
       final filteredBills = selectedCategory == 'All'
@@ -129,22 +137,38 @@ Widget build(BuildContext context) {
           // Popup menu for extra actions (Edit Profile / Sign Out)
           actions: [
             PopupMenuButton<String>(
-              icon: Icon(Icons.add, color: textDark),
+              icon: Icon(Icons.more_vert, color: textDark),
               color: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                borderRadius: BorderRadius.circular(12), ),
               itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'Edit Profile',
-                  child: Text('Edit Profile'),
-                ),
+                
+                const PopupMenuItem(value: 'Edit Profile', child: Text('Edit Profile')),
                 const PopupMenuDivider(),
-                const PopupMenuItem(
-                    value: 'Sign Out', child: Text('Sign Out')),
+                const PopupMenuItem(value: 'Sign out', child: Text('Sign out')),
+      
               ],
-            ),
-          ],
+              onSelected: (value)  async{
+              if (value == 'Edit Profile') {
+
+
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EditProfile(),
+                    ),
+                  );
+                });
+              } 
+              else if (value == 'Sign out') {
+                await _signOut();
+              }
+  },
+            )
+          
+          ]
         ),
 
         // ---------- Drawer (Side Menu) ----------
@@ -180,6 +204,7 @@ Widget build(BuildContext context) {
           ),
         ),
 
+
         // ---------- Profile Body ----------
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -191,9 +216,12 @@ Widget build(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Profile Image
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('images/sleepyjoe.jpg'),
+                    backgroundImage:(userData['ProfilePicUrl'] != null &&
+                                     userData['ProfilePicUrl'].toString().isNotEmpty)
+                        ? NetworkImage("${userData['ProfilePicUrl']}?v=${DateTime.now().millisecondsSinceEpoch}")
+                        : const AssetImage('images/sleepyjoe.jpg') as ImageProvider,
                   ),
                   const SizedBox(width: 20),
 
@@ -204,7 +232,8 @@ Widget build(BuildContext context) {
                       children: [
                         // Display user's Firestore name
                         Text(
-                          userData['username'] ?? 'User',
+
+                          safeget(userData, 'username', fallback: 'User'),
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -214,7 +243,7 @@ Widget build(BuildContext context) {
 
                         // Display user's email
                         Text(
-                          userData['email'] ?? 'No Email Found',
+                          safeget(userData, 'email', fallback: 'No Email Found'),
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.grey,
@@ -224,12 +253,9 @@ Widget build(BuildContext context) {
 
                         // Display user's full name
                         Text(
-                          ((userData['first_name'] + ' ' + userData['last_name'])) ?? 'No Name Found',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
+                              "${safeget(userData, 'first_name')} ${safeget(userData, 'last_name')}".trim(),
+                                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
                         const SizedBox(height: 8),
 
                         // Registration status (optional)
@@ -377,6 +403,11 @@ Widget build(BuildContext context) {
 }
 
 
+  Future<void> _signOut() async {
+  await FirebaseAuth.instance.signOut();
+}
+
+
   Widget _drawerItem(IconData icon, String title) {
     return ListTile(
       leading: Icon(icon, color: textDark),
@@ -402,20 +433,6 @@ class BillDetailPage extends StatelessWidget {
   }
 }
 
-// --- Blank Bill Detail Page ---
-class EditProfile extends StatelessWidget {
-  final String billId;
-  const EditProfile({super.key, required this.billId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Bill $billId')),
-      body: const Center(child: Text('This will be the Edit Profile Page.')),
-    );
-  }
-}
-
 // --- Blank Comments Page ---
 class CommentsPage extends StatelessWidget {
   final String billId;
@@ -430,3 +447,10 @@ class CommentsPage extends StatelessWidget {
   }
 }
 
+String safeget(Map<String, dynamic> data, String key, {String fallback = ''})
+{
+  if (data.containsKey(key) && data[key] != null){
+    return data[key].toString();
+  }
+  return fallback;
+}
