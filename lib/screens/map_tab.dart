@@ -63,115 +63,133 @@ class _MapTabState extends State<MapTab> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Text(
-            'Voting Locations',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 30),
-          SizedBox(
-            height: 350,
-            width: double.infinity,
-            child: GoogleMap( 
-              myLocationButtonEnabled: false,
-
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: 11.0,
-            ),
-            markers: {
-              const Marker(
-                markerId: MarkerId('City hall'),
-                position: LatLng(30.445966, -91.1879593),
-              )
-              }
-
-            
-          ),
-          ),
           
+           SizedBox(
+            height: 450,
+            width: double.infinity,
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black, width: 2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: GoogleMap(
+                      myLocationButtonEnabled: false,
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: _center,
+                        zoom: 11.0,
+                      ),
+                      markers: {...marker, const Marker(
+                        markerId: MarkerId('City hall'),
+                        position: LatLng(30.445966, -91.1879593),
+                      )},
+                    ),
+                  ),
+                ),
+          Positioned(
+                  top: 8,
+                 right: 8,
+                  child: FloatingActionButton(
+                    mini: true,
+                    onPressed: () async {
+                      Position position = await userPosition();
+                      mapController.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(position.latitude, position.longitude),
+                          ),
+                        ),
+                      );
+                      marker.clear();
+                      marker.add(
+                        Marker(
+                          markerId: const MarkerId('currentLocation'),
+                          position: LatLng(position.latitude, position.longitude),
+                        ),
+                      );
+                      setState(() {});
+                    },
+                    child: const Icon(Icons.my_location),
+                  ),
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: 20),
-          Text(
-            'Welcome DaVoterJoe',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
           SizedBox(height: 8),
-          Text(
-            'Your voting ward: 003/135',
-            style: TextStyle(
-              fontSize: 22,
-              color: Colors.black,
-            ),
-          ),
-        SizedBox(height: 8),
-          Text(
-            'Location: Baton Rouge City Hall',
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Address: 233 St Louis St',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 16),
-          Container(
+           Container(
+            width: double.infinity,
+            alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.shade600),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black),
+            ),
+            child: const Text(
+              'Your voting ward: 003/135',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                color: Colors.black,
               ),
-              child: Text(
-                'Open in Google Maps',
+            ),
+          ),
+        
+          
+          // Location bubble
+          Container(
+            height: 130,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.blueGrey.shade200),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                'Nearest Voting Location:',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.red.shade600,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-        ],
-      ),
-    ), 
-    floatingActionButton: FloatingActionButton(
-      onPressed: ()async{
-        Position position = await userPosition();
-        mapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(position.latitude, position.longitude),
-              
-            ),
-          ),
-        );
-        marker.clear();
-        marker.add(
-          Marker(
-            markerId: const MarkerId('currentLocation'),
-            position: LatLng(position.latitude, position.longitude),
-          ),
-        );
-        setState(() {});
-      },
-      child: const Icon(
-        Icons.my_location
-        ),
-    
-    
-    )
+              SizedBox(height: 6),
+                Text(
+                  'Baton Rouge City Hall',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '233 St Louis St',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black87,
+                  ),
+                ),   
+        ]
+      )
+      )
+        ]
+      )
+      )
     );
+    
   }
 
   //Error handling
