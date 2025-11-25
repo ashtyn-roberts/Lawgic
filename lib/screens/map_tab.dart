@@ -12,11 +12,13 @@ class MapTab extends StatefulWidget {
 
 
 class _MapTabState extends State<MapTab> {
-  Color? get primaryLavender => null;
-  Color? get textDark => null;
   late GoogleMapController mapController;
   Set<Marker> marker = {};  
   final LatLng _center = const LatLng(30.445966, -91.1879593);
+
+  Color get primaryLavender => const Color(0xFFF4F0FB);
+  Color get accentPurple => const Color(0xFFB48CFB);
+  Color get textDark => const Color(0xFF3D3A50);
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -26,6 +28,7 @@ class _MapTabState extends State<MapTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: primaryLavender,
       appBar: AppBar(
         backgroundColor: primaryLavender,
         elevation: 0,
@@ -44,19 +47,39 @@ class _MapTabState extends State<MapTab> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(Icons.person_outline, color: textDark),
-            color: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'Account', child: Text('Account')),
-              const PopupMenuItem(value: 'Registration Status', child: Text('Registration Status')),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: 'Sign Out', child: Text('Sign Out')),
-            ],
+      ),
+
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
           ),
-        ],
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration:
+                  BoxDecoration(color: accentPurple.withOpacity(0.15)),
+              child: Center(
+                child: Text(
+                  'Menu',
+                  style: TextStyle(
+                    color: textDark,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            _drawerItem(Icons.settings_outlined, 'Settings'),
+            _drawerItem(Icons.notifications_outlined, 'Notifications'),
+            _drawerItem(Icons.history, 'Recently Viewed'),
+            _drawerItem(Icons.info_outline, 'About'),
+          ],
+        ),
       ),
       
       body: Padding(
