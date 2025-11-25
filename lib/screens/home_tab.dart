@@ -94,12 +94,14 @@ class _HomeTabState extends State<HomeTab> {
             fontWeight: FontWeight.w600,
           ),
         ),
+
         leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(Icons.menu, color: textDark),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
+        
         actions: [
           PopupMenuButton<String>(
             icon: Icon(Icons.person_outline, color: textDark),
