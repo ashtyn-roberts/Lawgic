@@ -17,10 +17,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _signIn() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      if (!mounted) return;
       setState(() => _errorMessage = 'Please enter both email and password.');
       return;
     }
-    
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -42,14 +43,17 @@ class _SignInScreenState extends State<SignInScreen> {
       } else {
         message = 'Sign In Failed: ${e.message}';
       }
+      if (!mounted) return;
       setState(() {
         _errorMessage = message;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'An unexpected error occurred: $e';
       });
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });

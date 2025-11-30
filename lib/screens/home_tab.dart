@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../screens/profile_tab.dart';
+import '../screens/bill_model.dart';
+import '../services/legiScan.dart';
+import '../services/firestore.dart';
+import '../screens/bill_summarizer.dart';
 
 class HomeTab extends StatefulWidget {
   final String currentParish;
@@ -16,6 +21,12 @@ class _HomeTabState extends State<HomeTab> {
   String searchQuery = '';
 
   // --- Category definitions ---
+  final LegiScanService _legiScanService = LegiScanService();
+  final FirestoreService _firestoreService = FirestoreService();
+  
+  List<Bill> _allBills = [];
+  bool _isLoading = true;
+
   final List<Map<String, dynamic>> categories = [
     {'label': 'All', 'color': Colors.grey},
     {'label': 'Healthcare', 'color': Color(0xFFB48CFB)},
@@ -37,7 +48,38 @@ class _HomeTabState extends State<HomeTab> {
   Color get primaryLavender => const Color(0xFFF4F0FB);
   Color get textDark => const Color(0xFF3D3A50);
 
-  // The widget tree is now built from the single `build` below.
+  @override
+  void initState() {
+    super.initState();
+    _loadBills();
+  }
+
+  Future<void> _loadBills() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Fetch bills from LegiScan
+      final newBills = await _legiScanService.fetchLouisianaBills();
+
+      // Optionally fetch saved bills from Firestore (not yet merged here)
+      final savedBills = await _firestoreService.getAllSavedBills();
+      // TODO: merge newBills + savedBills if you want “saved” indicators, etc.
+
+      setState(() {
+        _allBills = newBills;
+      });
+    } catch (e) {
+      // You might later show a SnackBar or dialog instead of just printing
+      debugPrint("Error loading bills: $e");
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   //user sign out
   Future<void> _signOut() async {
@@ -52,6 +94,9 @@ class _HomeTabState extends State<HomeTab> {
         .where('election_date', isEqualTo: widget.currentElectionDate)
         .orderBy('title')
         .snapshots();
+    // Filter bills based on selected category
+    final List<Bill> filteredBills =
+        selectedCategory == 'All' ? _allBills : _allBills; // TODO: filter by type when added
 
     return Scaffold(
       backgroundColor: primaryLavender,
@@ -69,12 +114,14 @@ class _HomeTabState extends State<HomeTab> {
             fontWeight: FontWeight.w600,
           ),
         ),
+
         leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(Icons.menu, color: textDark),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
+        
         actions: [
           PopupMenuButton<String>(
             icon: Icon(Icons.person_outline, color: textDark),
@@ -89,7 +136,17 @@ class _HomeTabState extends State<HomeTab> {
             onSelected: (value) {
               if (value == 'Sign Out') {
                 _signOut();
+              } else if (value == 'Account') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileTab(),
+                  ),
+                );
+              } else if (value == 'Registration Status') {
+                // TODO: implement registration status page/dialog
               }
+              //navigation/logic for other menu items here
             },
           ),
         ],

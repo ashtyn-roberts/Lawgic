@@ -3,6 +3,7 @@ import 'home_tab.dart';
 import 'profile_tab.dart';
 import 'map_tab.dart';
 import 'calendar_tab.dart';
+import 'chat_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'bill_details_tab.dart';
 
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       const CalendarTab(),
       const MapTab(),
+      const AIChatScreen(),
       const ProfileTab(),
     ];
   }
@@ -57,6 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
             label: 'Map',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble),
+            label: 'AI Chat',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
