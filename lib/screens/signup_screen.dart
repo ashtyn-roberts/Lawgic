@@ -19,6 +19,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _usernameController = TextEditingController();
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
+  final _zipcodeController = TextEditingController();
+  final _birthyearController = TextEditingController();// added for birth year
+  final _birthmonthController = TextEditingController();// added for birth month
   Uint8List? _image;
   String? _errorMessage;
   bool _isLoading = false;
@@ -26,7 +29,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // user creation in Firebase Auth and profile creation in Firestore
   Future<void> _signUp() async {
     // Basic validation
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _usernameController.text.isEmpty|| _firstnameController.text.isEmpty || _lastnameController.text.isEmpty) {
+    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty || _usernameController.text.isEmpty|| _firstnameController.text.isEmpty || _lastnameController.text.isEmpty || _birthmonthController.text.isEmpty|| _birthyearController.text.isEmpty|| _zipcodeController.text.isEmpty ) {
       if (!mounted) return;
       setState(() => _errorMessage = 'All fields are required.');
       return;
@@ -127,6 +130,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       'email': user.email,
       'first_name': _firstnameController.text.trim(), // users collection first name 
       'last_name': _lastnameController.text.trim(),
+      'birthmonth': _birthmonthController.text.trim(), // users collection birth month
+      'birthyear': _birthyearController.text.trim(), // users collection birth year
+      'zipcode': _zipcodeController.text.trim(), // users collection zipcode
       'ProfilePicUrl': imageUrl, // can be null if no image was selected
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -203,6 +209,7 @@ Center(
               ),
               const SizedBox(height: 16),
 
+
               // last_name input
               TextField(
                 controller: _lastnameController,
@@ -239,6 +246,7 @@ Center(
               ),
               const SizedBox(height: 16),
 
+
               
 
               // password input
@@ -252,6 +260,43 @@ Center(
                 ),
               ),
               const SizedBox(height: 24),
+
+              // birth month input
+              TextField(
+                controller: _birthmonthController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Birth Month',
+                  hintText: 'MM',
+                  prefixIcon: Icon(Icons.calendar_month),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // birth year input
+              TextField(
+                controller: _birthyearController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Birth Year',
+                  hintText: 'YYYY',
+                  prefixIcon: Icon(Icons.calendar_month),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // birth year input
+              TextField(
+                controller: _zipcodeController,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'Zipcode',
+                  hintText: 'XXXXX',
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+
 
 
 

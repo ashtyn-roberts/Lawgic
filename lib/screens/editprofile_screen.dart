@@ -16,6 +16,9 @@ class _EditProfileState extends State<EditProfile> {
   final _usernameController = TextEditingController();
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
+  final _zipcodeController = TextEditingController();
+  final _birthyearController = TextEditingController();// added for birth year
+  final _birthmonthController = TextEditingController();// added for birth month
   Uint8List? _image;
   String? _imageUrl;
 
@@ -37,6 +40,9 @@ class _EditProfileState extends State<EditProfile> {
     _usernameController.dispose();
     _firstnameController.dispose();
     _lastnameController.dispose();
+    _zipcodeController.dispose();
+    _birthyearController.dispose();
+    _birthmonthController.dispose();
     super.dispose();
   }
 
@@ -107,6 +113,9 @@ class _EditProfileState extends State<EditProfile> {
         _usernameController.text = data['username']?.toString() ?? '';
         _firstnameController.text = data['first_name']?.toString() ?? '';
         _lastnameController.text = data['last_name']?.toString() ?? '';
+        _zipcodeController.text = data['zipcode']?.toString() ?? '';
+        _birthyearController.text = data['birthyear']?.toString() ?? '';
+        _birthmonthController.text = data['birthmonth']?.toString() ?? '';
         _imageUrl = data['ProfilePicUrl'] ?? '';
 
 
@@ -161,6 +170,9 @@ class _EditProfileState extends State<EditProfile> {
             'username': _usernameController.text.trim(),
             'first_name': _firstnameController.text.trim(),
             'last_name': _lastnameController.text.trim(),
+            'zipcode': _zipcodeController.text.trim(),
+            'birthyear': _birthyearController.text.trim(),
+            'birthmonth': _birthmonthController.text.trim(),
             'ProfilePicUrl': _imageUrl != null
                 ? "${_imageUrl!}?v=${DateTime.now().millisecondsSinceEpoch}"
                 : '',
@@ -273,7 +285,21 @@ class _EditProfileState extends State<EditProfile> {
                     decoration: _inputStyle('Username'),
                   ),
                   
+                  TextField(
+                    controller:_birthmonthController,
+                    decoration: _inputStyle('Birth Month'),
+                  ),
                   
+                  TextField(
+                    controller:_birthyearController,
+                    decoration: _inputStyle('Birth Year'),
+                  ),  
+
+                  TextField(
+                    controller:_zipcodeController,
+                    decoration: _inputStyle('Zipcode'),
+                  ),
+
                   // Error Message
                   if (_error != null)
                     Container(
