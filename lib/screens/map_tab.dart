@@ -215,6 +215,14 @@ class _MapTabState extends State<MapTab> {
     
   }
 
+  Widget _drawerItem(IconData icon, String title) {
+    return ListTile(
+      leading: Icon(icon, color: textDark),
+      title: Text(title, style: TextStyle(color: textDark)),
+      onTap: () {},
+    );
+  }
+
   //Error handling
   Future<Position> userPosition() async{
     bool serviceEnabled;
