@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/profile_tab.dart';
 import '../screens/bill_model.dart';
 import '../services/legiScan.dart';
@@ -8,13 +8,19 @@ import '../services/firestore.dart';
 import '../screens/bill_summarizer.dart';
 
 class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+  final String currentParish;
+  final String currentElectionDate;
+  const HomeTab({super.key, required this.currentParish, required this.currentElectionDate});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
 
 class _HomeTabState extends State<HomeTab> {
+  String selectedCategory = 'All';
+  String searchQuery = '';
+
+  // --- Category definitions ---
   final LegiScanService _legiScanService = LegiScanService();
   final FirestoreService _firestoreService = FirestoreService();
   
@@ -30,10 +36,16 @@ class _HomeTabState extends State<HomeTab> {
     {'label': 'Crime', 'color': Color(0xFF9AC8EB)},
   ];
 
-  String selectedCategory = 'All';
+  // --- Color fallback map if Firestore doesn't contain color ---
+  final Map<String, Color> categoryColors = {
+    'Healthcare': Color(0xFFB48CFB),
+    'Education': Color(0xFF81C995),
+    'Energy': Color(0xFFFFC47D),
+    'Taxes': Color(0xFFF28B82),
+    'Crime': Color(0xFF9AC8EB),
+  };
 
   Color get primaryLavender => const Color(0xFFF4F0FB);
-  Color get accentPurple => const Color(0xFFB48CFB);
   Color get textDark => const Color(0xFF3D3A50);
 
   @override
@@ -73,15 +85,23 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
   }
-
   @override
   Widget build(BuildContext context) {
+    // Compose a single Firestore stream filtered by parish and election date
+    final stream = FirebaseFirestore.instance
+        .collection('ballot_propositions')
+        .where('parish', isEqualTo: widget.currentParish)
+        .where('election_date', isEqualTo: widget.currentElectionDate)
+        .orderBy('title')
+        .snapshots();
     // Filter bills based on selected category
     final List<Bill> filteredBills =
         selectedCategory == 'All' ? _allBills : _allBills; // TODO: filter by type when added
 
     return Scaffold(
       backgroundColor: primaryLavender,
+
+      // ------------------ APP BAR ------------------ 
       appBar: AppBar(
         backgroundColor: primaryLavender,
         elevation: 0,
@@ -132,6 +152,7 @@ class _HomeTabState extends State<HomeTab> {
         ],
       ),
 
+      // ------------------ DRAWER --------------------
       drawer: Drawer(
         backgroundColor: Colors.white,
         shape: const RoundedRectangleBorder(
@@ -145,7 +166,7 @@ class _HomeTabState extends State<HomeTab> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: accentPurple.withOpacity(0.15),
+                color: categoryColors['Healthcare']!.withOpacity(0.15),
               ),
               child: Center(
                 child: Text(
@@ -166,16 +187,20 @@ class _HomeTabState extends State<HomeTab> {
         ),
       ),
 
+      // ------------------ BODY ---------------------
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             // Search bar
             TextField(
+              onChanged: (value) {
+                setState(() => searchQuery = value.toLowerCase());
+              },
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
-                hintText: 'Hinted search text',
+                hintText: 'Search bills...',
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 hintStyle: TextStyle(color: Colors.grey[600]),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
@@ -188,7 +213,7 @@ class _HomeTabState extends State<HomeTab> {
 
             const SizedBox(height: 12),
 
-            // Category chips (with filter functionality)
+            // Category chips
             SizedBox(
               height: 40,
               child: ListView.separated(
@@ -209,11 +234,8 @@ class _HomeTabState extends State<HomeTab> {
                     selected: isSelected,
                     selectedColor: cat['color'].withOpacity(0.9),
                     backgroundColor: cat['color'].withOpacity(0.15),
-                    onSelected: (_) {
-                      setState(() {
-                        selectedCategory = cat['label'];
-                      });
-                    },
+                    onSelected: (_) =>
+                        setState(() => selectedCategory = cat['label']),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -224,111 +246,131 @@ class _HomeTabState extends State<HomeTab> {
 
             const SizedBox(height: 10),
 
-            // Bills list
+            // ------------------ FIRESTORE STREAM ------------------
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredBills.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No bills found.',
-                            style: TextStyle(color: Colors.grey[700]),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: filteredBills.length,
-                          itemBuilder: (context, index) {
-                            final bill = filteredBills[index];
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        BillSummarizerScreen(
-                                      bill: bill,
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                margin:
-                                    const EdgeInsets.symmetric(vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black12
-                                          .withOpacity(0.05),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Colored stripe – using accentPurple for now
-                                    Container(
-                                      width: 6,
-                                      height: 70,
-                                      decoration: BoxDecoration(
-                                        color: accentPurple,
-                                        borderRadius:
-                                            const BorderRadius.only(
-                                          topLeft: Radius.circular(16),
-                                          bottomLeft:
-                                              Radius.circular(16),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: ListTile(
-                                        title: Text(
-                                          bill.billNumber,
-                                          style: TextStyle(
-                                            color: textDark,
-                                            fontWeight:
-                                                FontWeight.w600,
-                                          ),
-                                        ),
-                                        subtitle: Text(
-                                          bill.geminiSummary ??
-                                              bill.latestAction,
-                                          maxLines: 2,
-                                          overflow:
-                                              TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                              color:
-                                                  Colors.grey[700]),
-                                        ),
-                                        trailing: IconButton(
-                                          icon: const Icon(
-                                            Icons
-                                                .chat_bubble_outline,
-                                            color: Colors.black54,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    CommentsPage(
-                                                  billId: bill.billId,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: stream,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final docs = snapshot.data!.docs;
+
+                  // --- Filtering ---
+                  final filtered = docs.where((doc) {
+                    final title = (doc['title'] ?? '').toString().toLowerCase();
+                    final category = doc['category'] ?? 'Uncategorized';
+
+                    final matchesCategory = selectedCategory == 'All'
+                        ? true
+                        : category == selectedCategory;
+
+                    final matchesSearch = title.contains(searchQuery);
+
+                    return matchesCategory && matchesSearch;
+                  }).toList();
+
+                  return ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final doc = filtered[index];
+                      final title = doc['title'];
+                      final summary = doc['summary']?['overview'] ??
+                          "No summary available";
+                      final category = doc['category'] ?? 'Uncategorized';
+
+                      // Choose color
+                      final color = categoryColors[category] ?? Colors.grey;
+
+                      return _billCard(
+                        id: doc.id,
+                        title: title,
+                        summary: summary,
+                        color: color,
+                        category: category,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------ BILL CARD ------------------
+  Widget _billCard({
+    required String id,
+    required String title,
+    required String summary,
+    required Color color,
+    required String category,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BillDetailPage(billId: id),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12.withOpacity(0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 6,
+              height: 70,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListTile(
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    color: textDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  summary,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.black54),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CommentsPage(billId: id),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -345,7 +387,8 @@ class _HomeTabState extends State<HomeTab> {
   }
 }
 
-// --- Blank Bill Detail Page ---
+// ---------- Dummy Detail & Comments Pages ----------
+
 class BillDetailPage extends StatelessWidget {
   final String billId;
   const BillDetailPage({super.key, required this.billId});
@@ -354,14 +397,11 @@ class BillDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Bill $billId')),
-      body: const Center(
-        child: Text('This will be the main Bill Detail Page.'),
-      ),
+      body: const Center(child: Text('Bill Details Placeholder')),
     );
   }
 }
 
-// --- Blank Comments Page ---
 class CommentsPage extends StatelessWidget {
   final String billId;
   const CommentsPage({super.key, required this.billId});
@@ -370,9 +410,7 @@ class CommentsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Comments for Bill $billId')),
-      body: const Center(
-        child: Text('Comments section will go here.'),
-      ),
+      body: const Center(child: Text('Comments Placeholder')),
     );
   }
 }
