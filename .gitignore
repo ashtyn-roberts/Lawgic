@@ -43,8 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-<<<<<<< HEAD
-=======
 
 # Firebase credentials 
 firebase_config.json
@@ -70,4 +68,3 @@ voting_location_page.png
 voter_results_page.png
 error_response.html
 success_response.html
->>>>>>> Scraper
