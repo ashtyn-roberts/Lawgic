@@ -1,7 +1,7 @@
 //services/legiScan.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../screens/bill_model.dart';
+import '../models/bill_model.dart';
 
 //!!! - replace placeholder with actual LegiScan API key.
 const String _legiScanApiKey = '7d803ad4b409194319d1315b3447199d'; // <-LEGISCAN KEY

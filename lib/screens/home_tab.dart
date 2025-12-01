@@ -2,102 +2,100 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/profile_tab.dart';
-import '../screens/bill_model.dart';
-import '../services/legiScan.dart';
-import '../services/firestore.dart';
-import '../screens/bill_summarizer.dart';
+import 'proposition_detail_screen.dart';
 
 class HomeTab extends StatefulWidget {
-  final String currentParish;
-  final String currentElectionDate;
-  const HomeTab({super.key, required this.currentParish, required this.currentElectionDate});
+  const HomeTab({super.key});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
 
 class _HomeTabState extends State<HomeTab> {
-  String selectedCategory = 'All';
   String searchQuery = '';
-
-  // --- Category definitions ---
-  final LegiScanService _legiScanService = LegiScanService();
-  final FirestoreService _firestoreService = FirestoreService();
-  
-  List<Bill> _allBills = [];
-  bool _isLoading = true;
-
-  final List<Map<String, dynamic>> categories = [
-    {'label': 'All', 'color': Colors.grey},
-    {'label': 'Healthcare', 'color': Color(0xFFB48CFB)},
-    {'label': 'Education', 'color': Color(0xFF81C995)},
-    {'label': 'Energy', 'color': Color(0xFFFFC47D)},
-    {'label': 'Taxes', 'color': Color(0xFFF28B82)},
-    {'label': 'Crime', 'color': Color(0xFF9AC8EB)},
-  ];
-
-  // --- Color fallback map if Firestore doesn't contain color ---
-  final Map<String, Color> categoryColors = {
-    'Healthcare': Color(0xFFB48CFB),
-    'Education': Color(0xFF81C995),
-    'Energy': Color(0xFFFFC47D),
-    'Taxes': Color(0xFFF28B82),
-    'Crime': Color(0xFF9AC8EB),
-  };
+  String? userParish;
+  String? userParishCode;
+  bool _isLoadingUser = true;
 
   Color get primaryLavender => const Color(0xFFF4F0FB);
+  Color get accentPurple => const Color(0xFFB48CFB);
   Color get textDark => const Color(0xFF3D3A50);
 
   @override
   void initState() {
     super.initState();
-    _loadBills();
+    _loadUserParish();
   }
 
-  Future<void> _loadBills() async {
-    setState(() {
-      _isLoading = true;
-    });
+  /// Load user's parish from Firestore
+  Future<void> _loadUserParish() async {
+    setState(() => _isLoadingUser = true);
 
     try {
-      // Fetch bills from LegiScan
-      final newBills = await _legiScanService.fetchLouisianaBills();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() => _isLoadingUser = false);
+        return;
+      }
 
-      // Optionally fetch saved bills from Firestore (not yet merged here)
-      final savedBills = await _firestoreService.getAllSavedBills();
-      // TODO: merge newBills + savedBills if you want “saved” indicators, etc.
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
-      setState(() {
-        _allBills = newBills;
-      });
+      if (userDoc.exists) {
+        final data = userDoc.data()!;
+        setState(() {
+          userParish = data['voter_parish'];
+          // Convert to format with code (e.g., "EAST BATON ROUGE - 17")
+          userParishCode = _getParishWithCode(userParish);
+          _isLoadingUser = false;
+        });
+      } else {
+        setState(() => _isLoadingUser = false);
+      }
     } catch (e) {
-      // You might later show a SnackBar or dialog instead of just printing
-      debugPrint("Error loading bills: $e");
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      debugPrint("Error loading user parish: $e");
+      setState(() => _isLoadingUser = false);
     }
   }
 
-  //user sign out
+  /// Convert parish name to format with code
+  String? _getParishWithCode(String? parish) {
+    if (parish == null) return null;
+    
+    final parishCodes = {
+      'ACADIA': '01', 'ALLEN': '02', 'ASCENSION': '03', 'ASSUMPTION': '04',
+      'AVOYELLES': '05', 'BEAUREGARD': '06', 'BIENVILLE': '07', 'BOSSIER': '08',
+      'CADDO': '09', 'CALCASIEU': '10', 'CALDWELL': '11', 'CAMERON': '12',
+      'CATAHOULA': '13', 'CLAIBORNE': '14', 'CONCORDIA': '15', 'DE SOTO': '16',
+      'EAST BATON ROUGE': '17', 'EAST CARROLL': '18', 'EAST FELICIANA': '19',
+      'EVANGELINE': '20', 'FRANKLIN': '21', 'GRANT': '22', 'IBERIA': '23',
+      'IBERVILLE': '24', 'JACKSON': '25', 'JEFFERSON': '26', 'JEFFERSON DAVIS': '27',
+      'LAFAYETTE': '28', 'LAFOURCHE': '29', 'LA SALLE': '30', 'LINCOLN': '31',
+      'LIVINGSTON': '32', 'MADISON': '33', 'MOREHOUSE': '34', 'NATCHITOCHES': '35',
+      'ORLEANS': '36', 'OUACHITA': '37', 'PLAQUEMINES': '38', 'POINTE COUPEE': '39',
+      'RAPIDES': '40', 'RED RIVER': '41', 'RICHLAND': '42', 'SABINE': '43',
+      'ST. BERNARD': '44', 'ST. CHARLES': '45', 'ST. HELENA': '46', 'ST. JAMES': '47',
+      'ST. JOHN THE BAPTIST': '48', 'ST. LANDRY': '49', 'ST. MARTIN': '50',
+      'ST. MARY': '51', 'ST. TAMMANY': '52', 'TANGIPAHOA': '53', 'TENSAS': '54',
+      'TERREBONNE': '55', 'UNION': '56', 'VERMILION': '57', 'VERNON': '58',
+      'WASHINGTON': '59', 'WEBSTER': '60', 'WEST BATON ROUGE': '61',
+      'WEST CARROLL': '62', 'WEST FELICIANA': '63', 'WINN': '64',
+    };
+
+    final parishUpper = parish.toUpperCase();
+    final code = parishCodes[parishUpper];
+    
+    return code != null ? '$parishUpper - $code' : parish;
+  }
+
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
   }
+
   @override
   Widget build(BuildContext context) {
-    // Compose a single Firestore stream filtered by parish and election date
-    final stream = FirebaseFirestore.instance
-        .collection('ballot_propositions')
-        .where('parish', isEqualTo: widget.currentParish)
-        .where('election_date', isEqualTo: widget.currentElectionDate)
-        .orderBy('title')
-        .snapshots();
-    // Filter bills based on selected category
-    final List<Bill> filteredBills =
-        selectedCategory == 'All' ? _allBills : _allBills; // TODO: filter by type when added
-
     return Scaffold(
       backgroundColor: primaryLavender,
 
@@ -114,14 +112,12 @@ class _HomeTabState extends State<HomeTab> {
             fontWeight: FontWeight.w600,
           ),
         ),
-
         leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(Icons.menu, color: textDark),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        
         actions: [
           PopupMenuButton<String>(
             icon: Icon(Icons.person_outline, color: textDark),
@@ -139,14 +135,9 @@ class _HomeTabState extends State<HomeTab> {
               } else if (value == 'Account') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileTab(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const ProfileTab()),
                 );
-              } else if (value == 'Registration Status') {
-                // TODO: implement registration status page/dialog
               }
-              //navigation/logic for other menu items here
             },
           ),
         ],
@@ -165,9 +156,7 @@ class _HomeTabState extends State<HomeTab> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(
-                color: categoryColors['Healthcare']!.withOpacity(0.15),
-              ),
+              decoration: BoxDecoration(color: accentPurple.withOpacity(0.15)),
               child: Center(
                 child: Text(
                   'Menu',
@@ -188,111 +177,59 @@ class _HomeTabState extends State<HomeTab> {
       ),
 
       // ------------------ BODY ---------------------
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: _isLoadingUser
+          ? const Center(child: CircularProgressIndicator())
+          : userParishCode == null
+              ? _buildNoParishView()
+              : _buildPropositionsView(),
+    );
+  }
+
+  /// Show message when user doesn't have parish info
+  Widget _buildNoParishView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Search bar
-            TextField(
-              onChanged: (value) {
-                setState(() => searchQuery = value.toLowerCase());
+            Icon(Icons.how_to_vote, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No Voter Registration Found',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please complete your voter registration to view ballot propositions.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileTab()),
+                );
               },
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Search bills...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                hintStyle: TextStyle(color: Colors.grey[600]),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Category chips
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  final bool isSelected = selectedCategory == cat['label'];
-                  return ChoiceChip(
-                    label: Text(
-                      cat['label'],
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : cat['color'].withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedColor: cat['color'].withOpacity(0.9),
-                    backgroundColor: cat['color'].withOpacity(0.15),
-                    onSelected: (_) =>
-                        setState(() => selectedCategory = cat['label']),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // ------------------ FIRESTORE STREAM ------------------
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: stream,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final docs = snapshot.data!.docs;
-
-                  // --- Filtering ---
-                  final filtered = docs.where((doc) {
-                    final title = (doc['title'] ?? '').toString().toLowerCase();
-                    final category = doc['category'] ?? 'Uncategorized';
-
-                    final matchesCategory = selectedCategory == 'All'
-                        ? true
-                        : category == selectedCategory;
-
-                    final matchesSearch = title.contains(searchQuery);
-
-                    return matchesCategory && matchesSearch;
-                  }).toList();
-
-                  return ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final doc = filtered[index];
-                      final title = doc['title'];
-                      final summary = doc['summary']?['overview'] ??
-                          "No summary available";
-                      final category = doc['category'] ?? 'Uncategorized';
-
-                      // Choose color
-                      final color = categoryColors[category] ?? Colors.grey;
-
-                      return _billCard(
-                        id: doc.id,
-                        title: title,
-                        summary: summary,
-                        color: color,
-                        category: category,
-                      );
-                    },
-                  );
-                },
+              child: const Text(
+                'Update Registration Info',
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
           ],
@@ -301,31 +238,251 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // ------------------ BILL CARD ------------------
-  Widget _billCard({
-    required String id,
+  /// Main view showing ballot propositions
+  Widget _buildPropositionsView() {
+    // Debug: Print what we're querying for
+    debugPrint("Querying ballot_propositions for parish: $userParishCode");
+    
+    // Stream of ballot propositions for user's parish
+    final stream = FirebaseFirestore.instance
+        .collection('ballot_propositions')
+        .where('parish', isEqualTo: userParishCode)
+        .snapshots();
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Parish info banner
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: accentPurple.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: accentPurple.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.location_on, color: accentPurple),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Parish',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        userParish ?? 'Unknown',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: textDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadUserParish,
+                  tooltip: 'Refresh',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Search bar
+          TextField(
+            onChanged: (value) {
+              setState(() => searchQuery = value.toLowerCase());
+            },
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: 'Search propositions...',
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              hintStyle: TextStyle(color: Colors.grey[600]),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Section title
+          Text(
+            'Ballot Propositions',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: textDark,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // ------------------ PROPOSITIONS LIST ------------------
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: stream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  debugPrint("Error in StreamBuilder: ${snapshot.error}");
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error Loading Propositions',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            snapshot.error.toString(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadUserParish,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.ballot_outlined, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No Propositions Found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No ballot propositions available for your parish yet.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final docs = snapshot.data!.docs;
+
+                // Filter by search query
+                final filtered = docs.where((doc) {
+                  if (searchQuery.isEmpty) return true;
+                  
+                  final title = (doc['title'] ?? '').toString().toLowerCase();
+                  final fullText = (doc['full_text'] ?? '').toString().toLowerCase();
+                  
+                  return title.contains(searchQuery) || fullText.contains(searchQuery);
+                }).toList();
+
+                if (filtered.isEmpty) {
+                  return const Center(
+                    child: Text('No propositions match your search'),
+                  );
+                }
+
+                return ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final doc = filtered[index];
+                    final title = doc['title'] ?? 'Untitled Proposition';
+                    final fullText = doc['full_text'] ?? '';
+                    final electionDate = doc['election_date'] ?? '';
+                    
+                    // Get preview (first 150 characters)
+                    String preview = fullText.length > 150
+                        ? '${fullText.substring(0, 150)}...'
+                        : fullText;
+
+                    return _propositionCard(
+                      propositionId: doc.id,
+                      title: title,
+                      preview: preview,
+                      fullText: fullText,
+                      electionDate: electionDate,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Proposition card widget
+  Widget _propositionCard({
     required String title,
-    required String summary,
-    required Color color,
-    required String category,
+    required String preview,
+    required String fullText,
+    required String electionDate,
+    required String propositionId,
   }) {
     return GestureDetector(
       onTap: () {
+        // Navigate to detail screen
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BillDetailPage(billId: id),
+            builder: (context) => PropositionDetailScreen(
+              propositionId: propositionId,
+              title: title,
+              fullText: fullText,
+              electionDate: electionDate,
+              parish: userParish ?? 'Unknown',
+            ),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black12.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -333,43 +490,71 @@ class _HomeTabState extends State<HomeTab> {
         ),
         child: Row(
           children: [
+            // Color accent bar
             Container(
               width: 6,
-              height: 70,
+              height: 100,
               decoration: BoxDecoration(
-                color: color,
+                color: accentPurple,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   bottomLeft: Radius.circular(16),
                 ),
               ),
             ),
+            // Content
             Expanded(
-              child: ListTile(
-                title: Text(
-                  title,
-                  style: TextStyle(
-                    color: textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  summary,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.grey[700]),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline, color: Colors.black54),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CommentsPage(billId: id),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: textDark,
                       ),
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      preview,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                        height: 1.4,
+                      ),
+                    ),
+                    if (electionDate.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            electionDate,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+            ),
+            // Arrow icon
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey[400],
               ),
             ),
           ],
@@ -383,34 +568,6 @@ class _HomeTabState extends State<HomeTab> {
       leading: Icon(icon, color: textDark),
       title: Text(title, style: TextStyle(color: textDark)),
       onTap: () {},
-    );
-  }
-}
-
-// ---------- Dummy Detail & Comments Pages ----------
-
-class BillDetailPage extends StatelessWidget {
-  final String billId;
-  const BillDetailPage({super.key, required this.billId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Bill $billId')),
-      body: const Center(child: Text('Bill Details Placeholder')),
-    );
-  }
-}
-
-class CommentsPage extends StatelessWidget {
-  final String billId;
-  const CommentsPage({super.key, required this.billId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Comments for Bill $billId')),
-      body: const Center(child: Text('Comments Placeholder')),
     );
   }
 }

@@ -1,6 +1,6 @@
 //services/firestore.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../screens/bill_model.dart'; 
+import '../models/bill_model.dart'; 
 
 class FirestoreService {
   //collection reference for 'bills' collection

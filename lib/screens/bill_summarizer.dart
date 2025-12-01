@@ -1,6 +1,6 @@
 //screens/bill_summarizer.dart
 import 'package:flutter/material.dart';
-import '../screens/bill_model.dart';
+import '../models/bill_model.dart';
 import '../services/gemini.dart'; 
 import '../services/firestore.dart'; 
 
