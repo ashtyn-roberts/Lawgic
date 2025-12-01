@@ -43,3 +43,31 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+<<<<<<< HEAD
+=======
+
+# Firebase credentials 
+firebase_config.json
+**/firebase_config.json
+lawgic_backend/firebase_config.json
+
+# Python virtual environment
+venv/
+env/
+*.pyc
+__pycache__/
+
+# API keys and secrets
+.env
+*.key
+*.pem
+secrets.json
+
+# Selenium screenshots and debug files
+*.png
+error_screenshot.png
+voting_location_page.png
+voter_results_page.png
+error_response.html
+success_response.html
+>>>>>>> Scraper

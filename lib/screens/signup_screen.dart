@@ -1,5 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
+=======
+import 'package:flutter/services.dart';
+>>>>>>> Scraper
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,18 +23,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _usernameController = TextEditingController();
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
+<<<<<<< HEAD
+=======
+  
+  //Voter registration fields
+  final _zipCodeController = TextEditingController();
+  int? _selectedBirthMonth;
+  final _birthYearController = TextEditingController();
+  
+>>>>>>> Scraper
   Uint8List? _image;
   String? _errorMessage;
   bool _isLoading = false;
 
+<<<<<<< HEAD
   // user creation in Firebase Auth and profile creation in Firestore
   Future<void> _signUp() async {
     // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _usernameController.text.isEmpty|| _firstnameController.text.isEmpty || _lastnameController.text.isEmpty) {
+=======
+  final List<String> _months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  // user creation in Firebase Auth and profile creation in Firestore
+  Future<void> _signUp() async {
+    // Basic validation
+    if (_emailController.text.isEmpty || 
+        _passwordController.text.isEmpty || 
+        _usernameController.text.isEmpty || 
+        _firstnameController.text.isEmpty || 
+        _lastnameController.text.isEmpty ||
+        _zipCodeController.text.isEmpty ||
+        _selectedBirthMonth == null ||
+        _birthYearController.text.isEmpty) {
+>>>>>>> Scraper
       if (!mounted) return;
       setState(() => _errorMessage = 'All fields are required.');
       return;
     }
+<<<<<<< HEAD
+=======
+
+    // Validate ZIP code
+    if (_zipCodeController.text.length != 5) {
+      if (!mounted) return;
+      setState(() => _errorMessage = 'ZIP code must be 5 digits.');
+      return;
+    }
+
+    // Validate birth year
+    final birthYear = int.tryParse(_birthYearController.text);
+    if (birthYear == null || birthYear < 1900 || birthYear > DateTime.now().year - 18) {
+      if (!mounted) return;
+      setState(() => _errorMessage = 'Please enter a valid birth year (must be 18+).');
+      return;
+    }
+
+>>>>>>> Scraper
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -55,8 +106,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         message = 'An account already exists for that email.';
       } else if (e.code == 'invalid-email') {
         message = 'The email address is not valid.';
+<<<<<<< HEAD
       }
        else {
+=======
+      } else {
+>>>>>>> Scraper
         message = 'Sign Up Failed: ${e.message}';
       }
       if (!mounted) return;
@@ -75,6 +130,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
     }
   }
+<<<<<<< HEAD
   // creates imagepicker that allows users to pick an image from a source 
   Future<Uint8List?> pickImage(ImageSource source ) async{
   final ImagePicker imagePicker = ImagePicker();
@@ -89,6 +145,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
 // uses imagepicker to allow users to select an image from device gallery 
   Future<void> selectImage() async{
+=======
+
+  // creates imagepicker that allows users to pick an image from a source 
+  Future<Uint8List?> pickImage(ImageSource source) async {
+    final ImagePicker imagePicker = ImagePicker();
+    XFile? file = await imagePicker.pickImage(source: source);
+
+    if (file != null) {
+      return await file.readAsBytes();
+    }
+    print('No Image Selected');
+    return null;
+  }
+
+  // uses imagepicker to allow users to select an image from device gallery 
+  Future<void> selectImage() async {
+>>>>>>> Scraper
     Uint8List? img = await pickImage(ImageSource.gallery);
     if (img != null) {
       if (!mounted) return;
@@ -96,18 +169,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _image = img;
       });
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> Scraper
   }
 
   // stores image to firebase storage and returns the download url
   Future<String> uploadImage(String uid, Uint8List file) async {
+<<<<<<< HEAD
     Reference ref =  FirebaseStorage.instance.ref().child('profilePics').child('$uid.jpg');
+=======
+    Reference ref = FirebaseStorage.instance.ref().child('profilePics').child('$uid.jpg');
+>>>>>>> Scraper
     UploadTask uploadTask = ref.putData(file);
     TaskSnapshot snapshot = await uploadTask;
     String downloadUrl = await snapshot.ref.getDownloadURL();
     return downloadUrl;
   }
 
+<<<<<<< HEAD
 
   /// save user's username + email to the users collection
   Future<void> _createFirestoreUserProfile(User user) async {
@@ -121,13 +202,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     
+=======
+  /// save user's username + email + voter registration info to the users collection
+  Future<void> _createFirestoreUserProfile(User user) async {
+    final firestore = FirebaseFirestore.instance;
+    
+    // upload profile image if available if not it will be null(empty)
+    String? imageUrl;
+    if (_image != null) {
+      imageUrl = await uploadImage(user.uid, _image!); // download url is stored in imageUrl
+    }
+
+>>>>>>> Scraper
     await firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'username': _usernameController.text.trim(),
       'email': user.email,
+<<<<<<< HEAD
       'first_name': _firstnameController.text.trim(), // users collection first name 
       'last_name': _lastnameController.text.trim(),
       'ProfilePicUrl': imageUrl, // can be null if no image was selected
+=======
+      'first_name': _firstnameController.text.trim(),
+      'last_name': _lastnameController.text.trim(),
+      'ProfilePicUrl': imageUrl, // can be null if no image was selected
+      //Voter registration fields
+      'zip_code': _zipCodeController.text.trim(),
+      'birth_month': _selectedBirthMonth,
+      'birth_year': int.parse(_birthYearController.text.trim()),
+>>>>>>> Scraper
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -139,6 +242,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _usernameController.dispose();
     _firstnameController.dispose();
     _lastnameController.dispose();
+<<<<<<< HEAD
+=======
+    _zipCodeController.dispose();
+    _birthYearController.dispose();
+>>>>>>> Scraper
     super.dispose();
   }
 
@@ -165,6 +273,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 40),
 
               // profile image selection
+<<<<<<< HEAD
 Center(
   child: Stack(
     clipBehavior: Clip.none,
@@ -190,6 +299,41 @@ Center(
 
               const SizedBox(height: 24),
 
+=======
+              Center(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    CircleAvatar(
+                      radius: 64,
+                      backgroundImage: _image != null
+                          ? MemoryImage(_image!)
+                          : const AssetImage('images/sleepyjoe.jpg') as ImageProvider,
+                    ),
+                    Positioned(
+                      bottom: -10,
+                      right: -10,
+                      child: IconButton(
+                        icon: const Icon(Icons.add_a_photo),
+                        onPressed: selectImage,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              //Personal Information Section
+              Text(
+                'Personal Information',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+              ),
+              const SizedBox(height: 16),
+>>>>>>> Scraper
 
               // first_name input
               TextField(
@@ -214,6 +358,7 @@ Center(
                 ),
               ),
               const SizedBox(height: 16),
+<<<<<<< HEAD
               
               // email input
               TextField(
@@ -226,6 +371,8 @@ Center(
                 ),
               ),
               const SizedBox(height: 16),
+=======
+>>>>>>> Scraper
 
               // username input
               TextField(
@@ -237,9 +384,35 @@ Center(
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
+<<<<<<< HEAD
               const SizedBox(height: 16),
 
               
+=======
+              const SizedBox(height: 24),
+
+              // Account Information Section
+              Text(
+                'Account Information',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+              ),
+              const SizedBox(height: 16),
+
+              // email input
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'user@example.com',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+>>>>>>> Scraper
 
               // password input
               TextField(
@@ -253,7 +426,79 @@ Center(
               ),
               const SizedBox(height: 24),
 
+<<<<<<< HEAD
 
+=======
+              // Voter Registration Section
+              Text(
+                'Voter Registration Info',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'We use this to verify your voter registration status',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+              ),
+              const SizedBox(height: 16),
+
+              // ZIP Code input
+              TextField(
+                controller: _zipCodeController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(5),
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'ZIP Code',
+                  hintText: '70817',
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Birth Month Dropdown
+              DropdownButtonFormField<int>(
+                value: _selectedBirthMonth,
+                decoration: const InputDecoration(
+                  labelText: 'Birth Month',
+                  prefixIcon: Icon(Icons.calendar_today_outlined),
+                ),
+                items: List.generate(12, (index) {
+                  return DropdownMenuItem(
+                    value: index + 1,
+                    child: Text(_months[index]),
+                  );
+                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedBirthMonth = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Birth Year input
+              TextField(
+                controller: _birthYearController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                decoration: const InputDecoration(
+                  labelText: 'Birth Year',
+                  hintText: '2003',
+                  prefixIcon: Icon(Icons.event_outlined),
+                ),
+              ),
+              const SizedBox(height: 24),
+>>>>>>> Scraper
 
               // error message
               if (_errorMessage != null)
@@ -261,7 +506,14 @@ Center(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: Text(
                     _errorMessage!,
+<<<<<<< HEAD
                     style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w500),
+=======
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w500,
+                    ),
+>>>>>>> Scraper
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -273,6 +525,19 @@ Center(
                       onPressed: _signUp,
                       child: const Text('Sign Up'),
                     ),
+<<<<<<< HEAD
+=======
+              const SizedBox(height: 16),
+
+              // Privacy notice
+              Text(
+                'By creating an account, you agree to our Terms of Service and Privacy Policy. Your voter registration information is used solely for verification purposes.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+>>>>>>> Scraper
               const SizedBox(height: 24),
 
               // switch to sign in
@@ -284,7 +549,14 @@ Center(
                     onPressed: widget.onTap,
                     child: const Text(
                       'Sign In',
+<<<<<<< HEAD
                       style: TextStyle(color: Color(0xFF1E88E5), fontWeight: FontWeight.bold),
+=======
+                      style: TextStyle(
+                        color: Color(0xFF1E88E5),
+                        fontWeight: FontWeight.bold,
+                      ),
+>>>>>>> Scraper
                     ),
                   ),
                 ],
@@ -295,4 +567,8 @@ Center(
       ),
     );
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> Scraper
