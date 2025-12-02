@@ -6,7 +6,7 @@ Tests the scraper functionality and API endpoints
 
 import requests
 import json
-from scraper_user_info import get_voter_info
+from scraper_user_info import get_complete_voter_info
 
 def test_scraper_directly():
     """Test the scraper module directly"""
@@ -19,7 +19,7 @@ def test_scraper_directly():
     print("  ZIP: 70817")
     print("  Birth: July 2003\n")
     
-    result = get_voter_info(
+    result = get_complete_voter_info(
         first_name="Ashtyn",
         last_name="Roberts",
         zip_code="70817",
