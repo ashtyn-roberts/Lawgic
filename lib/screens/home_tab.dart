@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/profile_tab.dart';
 import 'proposition_detail_screen.dart';
+import 'about_tab.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -567,7 +568,14 @@ class _HomeTabState extends State<HomeTab> {
     return ListTile(
       leading: Icon(icon, color: textDark),
       title: Text(title, style: TextStyle(color: textDark)),
-      onTap: () {},
+      onTap: () {
+        if (title == 'About') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AboutTab()),
+          );
+        }
+      },
     );
   }
 }

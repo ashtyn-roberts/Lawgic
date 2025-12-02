@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lawgic/screens/auth_gate.dart';
 import 'package:lawgic/screens/editprofile_screen.dart';
+import 'about_tab.dart';
 
 // Profile Tab Screen
 class ProfileTab extends StatefulWidget {
@@ -412,7 +413,14 @@ Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: textDark),
       title: Text(title, style: TextStyle(color: textDark)),
-      onTap: () {},
+      onTap: () {
+        if (title == 'About') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AboutTab()),
+          );
+        }
+      },
     );
   }
 }
