@@ -5,6 +5,7 @@ import '../screens/profile_tab.dart';
 import 'proposition_detail_screen.dart';
 import 'about_tab.dart';
 
+
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
@@ -30,11 +31,13 @@ class _HomeTabState extends State<HomeTab> {
 
   /// Load user's parish from Firestore
   Future<void> _loadUserParish() async {
+    if (!mounted) return;
     setState(() => _isLoadingUser = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
+        if (!mounted) return;
         setState(() => _isLoadingUser = false);
         return;
       }
@@ -57,6 +60,7 @@ class _HomeTabState extends State<HomeTab> {
       }
     } catch (e) {
       debugPrint("Error loading user parish: $e");
+      if (!mounted) return;
       setState(() => _isLoadingUser = false);
     }
   }
