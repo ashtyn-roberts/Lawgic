@@ -1,29 +1,29 @@
 {
-  "project_info": {
-    "project_number": "397952360707",
-    "project_id": "lawgic-9c1b5",
-    "storage_bucket": "lawgic-9c1b5.firebasestorage.app"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:397952360707:android:2f441661d9f96b8a98c936",
-        "android_client_info": {
-          "package_name": "com.example.lawgic"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyADzwVKxFGfz-EAolNz25Oa6o5xlh_hpRA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
+    "project_info": {
+      "project_number": "397952360707",
+      "project_id": "lawgic-9c1b5",
+      "storage_bucket": "lawgic-9c1b5.firebasestorage.app"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:397952360707:android:2f441661d9f96b8a98c936",
+          "android_client_info": {
+            "package_name": "com.example.lawgic"
+          }
+        },
+        "oauth_client": [],
+        "api_key": [
+          {
+            "current_key": "AIzaSyADzwVKxFGfz-EAolNz25Oa6o5xlh_hpRA"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": []
+          }
         }
       }
-    }
-  ],
-  "configuration_version": "1"
-}
+    ],
+    "configuration_version": "1"
+  }

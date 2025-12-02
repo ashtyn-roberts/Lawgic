@@ -2,9 +2,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async'; // For stream operations
+import '../config/api_keys.dart';
 
 //!!! - gemini API key goes here
-const String _apiKey = "AIzaSyDRVs1y2j-0Tc8M7O-juvL_Hy7ho4Rr_BA"; // <-GEMINI KEY
+final String _geminiKey = ApiKeys.geminiKey;
 const String _apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 class GeminiService {
@@ -15,7 +16,7 @@ class GeminiService {
     for (int i = 0; i < 3; i++) { //max 3 retries
       try {
         final response = await _client.post(
-          Uri.parse('$_apiUrl?key=$_apiKey'),
+          Uri.parse('$_apiUrl?key=$_geminiKey'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(payload),
         ).timeout(const Duration(seconds: 15)); //timeout

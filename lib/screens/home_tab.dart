@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/profile_tab.dart';
 import 'proposition_detail_screen.dart';
 import 'about_tab.dart';
+import '../screens/settings_screen.dart';
 
 
 class HomeTab extends StatefulWidget {
@@ -573,6 +574,29 @@ class _HomeTabState extends State<HomeTab> {
       leading: Icon(icon, color: textDark),
       title: Text(title, style: TextStyle(color: textDark)),
       onTap: () {
+        Navigator.pop(context); // close drawer first
+
+      if (title == 'Settings') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SettingsScreen()),
+        );
+      }
+
+      /*if (title == 'Notifications') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+        );
+      }
+
+      if (title == 'Recently Viewed') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RecentlyViewedScreen()),
+        );
+      }*/
+
         if (title == 'About') {
           Navigator.push(
             context,
