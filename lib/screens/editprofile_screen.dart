@@ -16,6 +16,11 @@ class _EditProfileState extends State<EditProfile> {
   final _usernameController = TextEditingController();
   final _firstnameController = TextEditingController();
   final _lastnameController = TextEditingController();
+
+    //Voter registration fields
+  final _zipCodeController = TextEditingController();
+  int? _selectedBirthMonth;
+  final _birthYearController = TextEditingController();
   Uint8List? _image;
   String? _imageUrl;
 
@@ -37,6 +42,8 @@ class _EditProfileState extends State<EditProfile> {
     _usernameController.dispose();
     _firstnameController.dispose();
     _lastnameController.dispose();
+    _zipCodeController.dispose();
+    _birthYearController.dispose();
     super.dispose();
   }
 
@@ -45,6 +52,13 @@ class _EditProfileState extends State<EditProfile> {
       setState(fn);
     }
   }
+
+final List<String> _months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  
 
 // creates imagepicker that allows users to pick an image from a source 
   Future<Uint8List?> pickImage(ImageSource source ) async{
@@ -116,7 +130,12 @@ class _EditProfileState extends State<EditProfile> {
         _usernameController.text = data['username']?.toString() ?? '';
         _firstnameController.text = data['first_name']?.toString() ?? '';
         _lastnameController.text = data['last_name']?.toString() ?? '';
+        _birthYearController.text = data['birth_year']?.toString() ?? '';
+        _zipCodeController.text = data['zip_code']?.toString() ?? '';
         _imageUrl = data['ProfilePicUrl'] ?? '';
+        _selectedBirthMonth = (data['birth_month'] is int)
+                                ?data['birth_month']
+                                :null;
 
 
         
@@ -151,7 +170,20 @@ class _EditProfileState extends State<EditProfile> {
       _safeSetState(() => _error = "All fields are required.");
       return;
     }
+    // Validate ZIP code
+    if (_zipCodeController.text.length != 5) {
+      if (!mounted) return;
+      setState(() => _error = 'ZIP code must be 5 digits.');
+      return;
+    }
 
+    // Validate birth year
+    final birthYear = int.tryParse(_birthYearController.text);
+    if (birthYear == null || birthYear < 1900 || birthYear > DateTime.now().year - 18) {
+      if (!mounted) return;
+      setState(() => _error = 'Please enter a valid birth year (must be 18+).');
+      return;
+    }
     _safeSetState(() {
       _saving = true;
       _error = null;
@@ -173,6 +205,9 @@ class _EditProfileState extends State<EditProfile> {
             'ProfilePicUrl': _imageUrl != null
                 ? "${_imageUrl!}?v=${DateTime.now().millisecondsSinceEpoch}"
                 : '',
+            'zip_code': _zipCodeController.text.trim(),
+            'birth_month': _selectedBirthMonth,
+            'birth_year': int.parse(_birthYearController.text.trim()),
             'updated_at': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
 
@@ -282,6 +317,37 @@ class _EditProfileState extends State<EditProfile> {
                     decoration: _inputStyle('Username'),
                   ),
                   
+              // Birth Month Dropdown
+              DropdownButtonFormField<int>(
+                value: _selectedBirthMonth,
+                decoration: const InputDecoration(
+                  labelText: 'Birth Month',
+                  prefixIcon: Icon(Icons.calendar_today_outlined),
+                ),
+                items: List.generate(12, (index) {
+                  return DropdownMenuItem(
+                    value: index + 1,
+                    child: Text(_months[index]),
+                  );
+                }),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedBirthMonth = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+                  TextField(
+                    controller:_birthYearController,
+                    decoration: _inputStyle('Birth Year'),
+                  ),  
+
+                  TextField(
+                    controller:_zipCodeController,
+                    decoration: _inputStyle('Zipcode'),
+                  ),                  
+
+        
                   
                   // Error Message
                   if (_error != null)
