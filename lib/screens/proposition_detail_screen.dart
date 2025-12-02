@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lawgic/services/favorites_service.dart';
 import 'comments_tab.dart';
 import 'notes_tab.dart';
+
 
 class PropositionDetailScreen extends StatefulWidget {
   final String propositionId;
@@ -9,6 +11,7 @@ class PropositionDetailScreen extends StatefulWidget {
   final String electionDate;
   final String parish;
 
+
   const PropositionDetailScreen({
     super.key,
     required this.propositionId,
@@ -16,6 +19,7 @@ class PropositionDetailScreen extends StatefulWidget {
     required this.fullText,
     required this.electionDate,
     required this.parish,
+
   });
 
   @override
@@ -30,11 +34,48 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
   Color get accentPurple => const Color(0xFFB48CFB);
   Color get textDark => const Color(0xFF3D3A50);
 
+  final FavoritesService _favoritesService = FavoritesService();
+  bool _isFavorite = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _checkIfFavorite();
   }
+
+  Future<void> _checkIfFavorite() async {
+    final fav = await _favoritesService.isFavorite(widget.propositionId);
+    if (mounted) {
+      setState(() {
+        _isFavorite = fav;
+      });
+    }
+  }
+
+  void _toggleFavorite() async {
+    final billData = {
+    'title': widget.title,
+    'full_text': widget.fullText,
+    'election_date': widget.electionDate,
+    'parish': widget.parish,
+    };
+
+    if(_isFavorite) {
+      await _favoritesService.removeFavorite(widget.propositionId);
+    } else {
+      await _favoritesService.addFavorite(widget.propositionId, billData);
+  
+    }
+
+    if (mounted)
+    {
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+    }
+  }
+
 
   @override
   void dispose() {
@@ -155,7 +196,26 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
             ),
           ),
 
-          const SizedBox(height: 20),
+          
+          const SizedBox(height: 12),
+
+          Center(
+  child: ElevatedButton.icon(
+    onPressed: _toggleFavorite,
+    icon: Icon(
+      _isFavorite ? Icons.favorite : Icons.favorite_border,
+      color: Colors.white,
+    ),
+    label: Text(_isFavorite ? 'Remove from Favorites' : 'Add to Favorites'),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: accentPurple,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+  ),
+),
 
           // Full Text Card
           Container(

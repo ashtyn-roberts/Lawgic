@@ -58,16 +58,25 @@ class _EditProfileState extends State<EditProfile> {
   return null;
  }
 
+  bool _isPickingImage = false;
+
 // uses imagepicker to allow users to select an image from device gallery 
   Future<void> selectImage() async{
-    Uint8List? img = await pickImage(ImageSource.gallery);
-    if (img != null) {
-      if (!mounted) return;
-      setState(() {
-        _image = img;
-      });
+    if (_isPickingImage) return; // Prevent multiple simultaneous picks
+    _isPickingImage = true;
+    try {
+      final Uint8List? img = await pickImage(ImageSource.gallery);
+      if (img != null && mounted) {
+        setState(() {
+          _image = img;
+        });
+      }
+    } catch (e) {
+      print("Error picking image: $e");
+      
+    } finally {
+      _isPickingImage = false;
     }
-
   }
 
   // stores image to firebase storage and returns the download url
