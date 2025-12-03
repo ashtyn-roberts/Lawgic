@@ -84,13 +84,13 @@ class _CommentsTabState extends State<CommentsTab> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: textDark,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Be the first to share your thoughts!',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: Theme.of(context).hintColor),
                 ),
               ],
             ),
@@ -113,7 +113,7 @@ class _CommentsTabState extends State<CommentsTab> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -133,7 +133,7 @@ class _CommentsTabState extends State<CommentsTab> {
                 child: Text(
                   username[0].toUpperCase(),
                   style: TextStyle(
-                    color: accentPurple,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -145,16 +145,17 @@ class _CommentsTabState extends State<CommentsTab> {
                   children: [
                     Text(
                       username,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
+                        color: Theme.of(context).textTheme.bodyLarge!.color,
                       ),
                     ),
                     Text(
                       _formatTimestamp(timestamp),
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).hintColor,
                       ),
                     ),
                   ],
@@ -168,29 +169,29 @@ class _CommentsTabState extends State<CommentsTab> {
             style: TextStyle(
               fontSize: 15,
               height: 1.4,
-              color: Colors.grey[800],
+              color: Theme.of(context).textTheme.bodyMedium!.color,
             ),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.thumb_up_outlined, size: 20),
+                icon: Icon(Icons.thumb_up_outlined, size: 20, color: Theme.of(context).iconTheme.color),
                 onPressed: () => _handleLike(commentId, true),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 4),
-              Text('$likes', style: TextStyle(color: Colors.grey[700])),
+              Text('$likes', style: TextStyle(color: Theme.of(context).hintColor)),
               const SizedBox(width: 16),
               IconButton(
-                icon: const Icon(Icons.thumb_down_outlined, size: 20),
+                icon: Icon(Icons.thumb_down_outlined, size: 20, color: Theme.of(context).iconTheme.color),
                 onPressed: () => _handleLike(commentId, false),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 4),
-              Text('$dislikes', style: TextStyle(color: Colors.grey[700])),
+              Text('$dislikes', style: TextStyle(color: Theme.of(context).hintColor)),
             ],
           ),
         ],
@@ -205,7 +206,7 @@ class _CommentsTabState extends State<CommentsTab> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).cardColor,
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -216,10 +217,12 @@ class _CommentsTabState extends State<CommentsTab> {
           Expanded(
             child: TextField(
               controller: _commentController,
+              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge!.color),
               decoration: InputDecoration(
                 hintText: 'Add a comment...',
+                hintStyle: TextStyle(color: Theme.of(context).hintColor),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Colors.grey[100],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,

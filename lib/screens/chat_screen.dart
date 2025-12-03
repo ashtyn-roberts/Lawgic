@@ -1,16 +1,13 @@
-//screens/chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lawgic/services/gemini.dart';
 
-//single message in chat
 class ChatMessage {
   final String text;
-  final bool isUser; // true for user, false for AI
-  
+  final bool isUser;
+
   ChatMessage({required this.text, required this.isUser});
 }
 
-//main chat screen widget
 class AIChatScreen extends StatefulWidget {
   const AIChatScreen({super.key});
 
@@ -30,77 +27,126 @@ class _AIChatScreenState extends State<AIChatScreen> {
     super.dispose();
   }
 
-  //sending a message
-  void _sendMessage() async {
+  Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _isLoading) return;
 
-    //add user message to the list
     setState(() {
       _messages.add(ChatMessage(text: text, isUser: true));
-      _isLoading = true;
       _controller.clear();
+      _isLoading = true;
     });
 
     try {
-      //call gemini
-      final responseText = await _geminiService.generateText(text);
+      final response = await _geminiService.generateText(text);
 
-      //add AI response to list
       setState(() {
-        _messages.add(ChatMessage(text: responseText, isUser: false));
+        _messages.add(ChatMessage(text: response, isUser: false));
       });
-
     } catch (e) {
-      //handle potential errors during API call
       setState(() {
-        _messages.add(ChatMessage(text: "Error: Failed to connect to AI. $e", isUser: false));
+        _messages.add(ChatMessage(
+          text: "⚠️ Error talking to AI.\n$e",
+          isUser: false,
+        ));
       });
     } finally {
-      //update loading state
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
-  //build a message bubble
-  Widget _buildMessage(ChatMessage message) {
+  Widget _buildBubble(ChatMessage msg) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final userBubble = theme.colorScheme.primary;
+    final aiBubble = isDark
+        ? const Color(0xFF1F1F1F)
+        : const Color(0xFFF1F1F1);
+
+    final userTextColor = Colors.white;
+    final aiTextColor = isDark ? Colors.white : Colors.black87;
+
+    return Align(
+      alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        padding: const EdgeInsets.all(14),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
+        decoration: BoxDecoration(
+          color: msg.isUser ? userBubble : aiBubble,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft:
+                msg.isUser ? const Radius.circular(16) : const Radius.circular(4),
+            bottomRight:
+                msg.isUser ? const Radius.circular(4) : const Radius.circular(16),
+          ),
+        ),
+        child: Text(
+          msg.text,
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.35,
+            color: msg.isUser ? userTextColor : aiTextColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputBar() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 6,
+            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(isDark ? 0.4 : 0.1),
+          ),
+        ],
+      ),
       child: Row(
-        mainAxisAlignment: message.isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        children: <Widget>[
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: message.isUser ? Colors.blue.shade600 : Colors.grey.shade800,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16.0),
-                  topRight: const Radius.circular(16.0),
-                  bottomLeft: message.isUser ? const Radius.circular(16.0) : const Radius.circular(4.0),
-                  bottomRight: message.isUser ? const Radius.circular(4.0) : const Radius.circular(16.0),
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              onSubmitted: (_) => _sendMessage(),
+              maxLines: null,
+              style: TextStyle(color: theme.textTheme.bodyLarge!.color),
+              decoration: InputDecoration(
+                hintText: "Ask me anything...",
+                hintStyle: TextStyle(
+                  color: theme.hintColor,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: message.isUser ? Colors.white : Colors.white70,
-                  fontSize: 15.0,
+                filled: true,
+                fillColor: isDark ? const Color(0xFF1C1C1C) : Colors.grey[200],
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),
           ),
+          const SizedBox(width: 10),
+          CircleAvatar(
+            backgroundColor: theme.colorScheme.primary,
+            radius: 24,
+            child: IconButton(
+              icon: const Icon(Icons.send, color: Colors.white),
+              onPressed: _isLoading ? null : _sendMessage,
+            ),
+          )
         ],
       ),
     );
@@ -108,94 +154,46 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'AI Assistant',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          "AI Assistant",
+          style: TextStyle(color: theme.textTheme.bodyLarge!.color),
         ),
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        iconTheme: IconThemeData(color: theme.textTheme.bodyLarge!.color),
+        elevation: 0,
       ),
-      body: Container(
-        color: Colors.black, //background for chat
-        child: Column(
-          children: <Widget>[
-            //chat message list
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                reverse: true, //show latest messages at bottom
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  //display messages from end of the list (most recent)
-                  return _buildMessage(_messages[_messages.length - 1 - index]);
-                },
-              ),
-            ),
-            
-            //loading indicator
-            if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(width: 8),
-                    SizedBox(
-                      width: 20, 
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blueAccent),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'AI is typing...', 
-                      style: TextStyle(color: Colors.white54, fontSize: 14)
-                    ),
-                  ],
-                ),
-              ),
-
-            //input composer
-            _buildTextComposer(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextComposer() {
-    return Container(
-      margin: const EdgeInsets.all(8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(30.0),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
-        children: <Widget>[
-          //text input field
+      body: Column(
+        children: [
           Expanded(
-            child: TextField(
-              controller: _controller,
-              onSubmitted: (_) => _sendMessage(),
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration.collapsed(
-                hintText: 'Ask your legal question...',
-                hintStyle: TextStyle(color: Colors.white54),
+            child: ListView.builder(
+              reverse: true,
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              itemCount: _messages.length,
+              itemBuilder: (context, i) =>
+                  _buildBubble(_messages[_messages.length - 1 - i]),
+            ),
+          ),
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Text("AI is typing...",
+                      style: TextStyle(color: theme.hintColor)),
+                ],
               ),
             ),
-          ),
-          
-          //send button
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: IconButton(
-              icon: const Icon(Icons.send, color: Colors.blueAccent),
-              onPressed: _isLoading ? null : _sendMessage,
-            ),
-          ),
+          _buildInputBar(),
         ],
       ),
     );

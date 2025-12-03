@@ -182,7 +182,7 @@ class _MapTabState extends State<MapTab> {
         title: Text(
           'Lawgic',
           style: TextStyle(
-            color: textColor,
+            color: textDark,
             fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
