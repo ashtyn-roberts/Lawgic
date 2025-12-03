@@ -1,4 +1,0 @@
-class ApiKeys {
-  static const String legiScanKey = "7d803ad4b409194319d1315b3447199d";
-  static const String geminiKey = "AIzaSyAMqp3CunaNN5j9kvPN02Ycav1asXjDKvQ";
-}
