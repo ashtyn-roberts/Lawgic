@@ -57,21 +57,17 @@ View detailed information on propositions (title, parish, election date, full te
 
 ▶️ Running the App
 -- Clone the repo:
-
-    % git clone https://github.com/yourname/lawgic.git
-    % cd lawgic
+% git clone https://github.com/yourname/lawgic.git
+% cd lawgic
 
 -- Install dependencies:
-
-    % flutter pub get
+% flutter pub get
 
 -- Create API Keys file
 * Copy the example:
-
-    % cp lib/config/api_keys_example.dart lib/config/api_keys.dart
+% cp lib/config/api_keys_example.dart lib/config/api_keys.dart
 
 * Then fill in your personal keys
 
 -- Run the app
-
-    % flutter run
+% flutter run
