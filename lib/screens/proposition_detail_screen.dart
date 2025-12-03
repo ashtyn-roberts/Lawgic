@@ -85,19 +85,21 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    
     return Scaffold(
-      backgroundColor: primaryLavender,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: primaryLavender,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textDark),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyLarge!.color),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Proposition Details',
           style: TextStyle(
-            color: textDark,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
@@ -105,7 +107,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
         bottom: TabBar(
           controller: _tabController,
           labelColor: accentPurple,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Theme.of(context).hintColor,
           indicatorColor: accentPurple,
           tabs: const [
             Tab(text: 'Details'),
@@ -131,6 +133,11 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
   }
 
   Widget _buildDetailsTab() {
+    final textColor = Theme.of(context).textTheme.bodyLarge!.color;
+    final subtitleColor = Theme.of(context).textTheme.bodyMedium!.color;
+    
+    final cardColor = Theme.of(context).cardColor;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -140,7 +147,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -158,7 +165,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: textDark,
+                    color: textColor,
                     height: 1.3,
                   ),
                 ),
@@ -171,7 +178,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                       'Election: ${widget.electionDate}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: subtitleColor,
                       ),
                     ),
                   ],
@@ -186,7 +193,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                         widget.parish,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[700],
+                          color: subtitleColor,
                         ),
                       ),
                     ),
@@ -221,7 +228,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -243,7 +250,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: textDark,
+                        color: textColor,
                       ),
                     ),
                   ],
@@ -254,7 +261,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                   style: TextStyle(
                     fontSize: 16,
                     height: 1.6,
-                    color: Colors.grey[800],
+                    color: textColor,
                   ),
                 ),
               ],
@@ -267,7 +274,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardColor,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -289,7 +296,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: textDark,
+                        color: textColor,
                       ),
                     ),
                   ],
@@ -298,8 +305,8 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _sentimentIndicator('For', 65, Colors.green),
-                    _sentimentIndicator('Against', 35, Colors.red),
+                    _sentimentIndicator('For', 65, Colors.green, textColor, subtitleColor),
+                    _sentimentIndicator('Against', 35, Colors.red, textColor, subtitleColor),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -308,7 +315,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                     'Based on community comments',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: subtitleColor,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -321,7 +328,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
     );
   }
 
-  Widget _sentimentIndicator(String label, int percentage, Color color) {
+  Widget _sentimentIndicator(String label, int percentage, Color progressColor, Color? textColor, Color? subtitleColor,) {
     return Column(
       children: [
         Stack(
@@ -333,8 +340,8 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
               child: CircularProgressIndicator(
                 value: percentage / 100,
                 strokeWidth: 8,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(color),
+                backgroundColor: Theme.of(context).dividerColor,
+                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
               ),
             ),
             Text(
@@ -342,7 +349,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: textDark,
+                color: textColor,
               ),
             ),
           ],
@@ -353,7 +360,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
+            color: subtitleColor,
           ),
         ),
       ],

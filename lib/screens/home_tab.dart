@@ -1,3 +1,4 @@
+//screens/home_tab.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -449,7 +450,6 @@ class _HomeTabState extends State<HomeTab> {
                       cardColor: cardColor,
                       textColor: textColor,
                       subtitleColor: subtitleColor,
-                      onTap: () {},
                     );
                   },
                 );
