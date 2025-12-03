@@ -56,17 +56,17 @@ View detailed information on propositions (title, parish, election date, full te
 * This project uses a file called api_keys.dart to safely store keys. This file is in the project's gitignore. It is IGNORED (!) and each member must generate their own API keys.
 
 ▶️ Running the App
--- Clone the repo
-    % git clone https://github.com/yourname/lawgic.git
-    % cd lawgic
+-- Clone the repo:
+% git clone https://github.com/yourname/lawgic.git
+% cd lawgic
 
 -- Install dependencies
     % flutter pub get
 
 -- Create API Keys file
 * Copy the example:
-    % cp lib/config/api_keys_example.dart lib/config/api_keys.dart
+% cp lib/config/api_keys_example.dart lib/config/api_keys.dart
 * Then fill in your personal keys
 
--- Run the app
-    % flutter run
+-- Run the app:
+% flutter run
