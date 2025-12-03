@@ -49,13 +49,12 @@ View detailed information on propositions (title, parish, election date, full te
 -- Tech Stack
 * Frontend: 
     - Flutter (Dart)
-    - Material 3 design
     - Custom dark mode handling
 * Backend
     - Firebase Authentication
     - Firebase Firestore
-    - Firebase Storage (optional)
-    - AI
+    - Firebase Storage
+    - LegiScan API (gets information for legislation in all 50 states and Congress)
     - Gemini Flash 2.5 API
     - Secure API access with locally stored api_keys.dart
 
