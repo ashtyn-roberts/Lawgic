@@ -61,6 +61,11 @@ __pycache__/
 *.pem
 secrets.json
 
+# Ignore real API keys
+lib/config/api_keys.dart
+api_keys.dart
+**/api_keys.dart
+
 # Selenium screenshots and debug files
 *.png
 error_screenshot.png
