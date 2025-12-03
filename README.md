@@ -60,8 +60,8 @@ View detailed information on propositions (title, parish, election date, full te
 % git clone https://github.com/yourname/lawgic.git
 % cd lawgic
 
--- Install dependencies
-    % flutter pub get
+-- Install dependencies:
+% flutter pub get
 
 -- Create API Keys file
 * Copy the example:
