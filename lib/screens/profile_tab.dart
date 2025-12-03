@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:lawgic/screens/auth_gate.dart';
-import 'package:lawgic/screens/editprofile_screen.dart';
-import 'package:lawgic/screens/proposition_detail_screen.dart';
+import 'auth_gate.dart';
+import 'editprofile_screen.dart';
+import 'proposition_detail_screen.dart';
 import 'about_tab.dart';
-
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 // --------------------------------------------------------
 // SAFE GETTER — prevents null crashes from Firestore maps
 // --------------------------------------------------------
@@ -17,7 +18,6 @@ dynamic safeget(Map<String, dynamic> map, String key,
     return fallback;
   }
 }
-
 
 // --------------------------------------------------------
 // PROFILE TAB
@@ -36,6 +36,16 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    //final drawerColor = Theme.of(context).drawerTheme.backgroundColor ?? (isDark ? const Color(0xFF121212) : Colors.white);
+    //final drawerHeaderColor = Theme.of(context).colorScheme.surfaceVariant ?? (isDark ? Colors.deepPurple.withOpacity(0.25) : accentPurple.withOpacity(0.15));
+    final textColor = isDark ? Colors.white : textDark;
+    final subtitleColor = isDark ? Colors.white70 : Colors.black87;
+    final cardColor = isDark ? const Color(0xFF1B1B1B) : Colors.white;
+
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -55,45 +65,80 @@ class _ProfileTabState extends State<ProfileTab> {
         }
 
         if (!snapshot.hasData || !snapshot.data!.exists) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AuthGate()),
-            );
-          });
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: Text("Profile not found"));
         }
 
         final userData = snapshot.data!.data() as Map<String, dynamic>;
 
-        return Scaffold(
-          backgroundColor: primaryLavender,
-          drawer: _buildDrawer(),
-          appBar: _buildAppBar(context),
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- Profile Section (Fixed at top) ---
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  child: _buildProfileSection(userData),
-                ),
-                const SizedBox(height: 16),
-                
-                // --- Section Header ---
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: _buildSectionHeader(),
-                ),
-                const SizedBox(height: 16),
-                
-                // --- Favorites List (Scrollable only this part) ---
-                Expanded(
-                  child: _buildFavoritePropositionView(),
-                ),
-              ],
+  return Container(
+          color: bgColor,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Profile",
+                        style: TextStyle(
+                          fontSize: 26,
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_vert, color: textColor),
+                        color: isDark ? const Color(0xFF222222) : Colors.white,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'Edit',
+                            child: Text("Edit Profile", style: TextStyle(color: textColor)),
+                          ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: 'Sign out',
+                            child: Text("Sign Out", style: TextStyle(color: textColor)),
+                          ),
+                        ],
+                        onSelected: (value) async {
+                          if (value == 'Edit') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const EditProfile()),
+                            );
+                          } else if (value == 'Sign out') {
+                            await FirebaseAuth.instance.signOut();
+                          }
+                        },
+                      )
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // --------------------------------------------------------
+                  // PROFILE HEADER
+                  // --------------------------------------------------------
+                  _buildProfileSection(userData, textColor, subtitleColor),
+
+                  const SizedBox(height: 30),
+
+                  // SECTION HEADER
+                  _buildSectionHeader(textColor),
+
+                  const SizedBox(height: 20),
+
+                  // FAVORITE PROPOSITIONS LIST
+                  _buildFavoritePropositionView(
+                    textColor,
+                    subtitleColor,
+                    cardColor,
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -101,96 +146,12 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
-  }
-
-  Drawer _buildDrawer() {
-    return Drawer(
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ),
-      ),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(color: accentPurple.withOpacity(0.15)),
-            child: Center(
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: textDark,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          _drawerItem(Icons.settings_outlined, 'Settings'),
-          _drawerItem(Icons.notifications_outlined, 'Notifications'),
-          _drawerItem(Icons.history, 'Recently Viewed'),
-          _drawerItem(Icons.info_outline, 'About'),
-        ],
-      ),
-    );
-  }
-
-  AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: primaryLavender,
-      elevation: 0,
-      centerTitle: true,
-      title: Text(
-        "Lawgic",
-        style: TextStyle(
-          color: textDark,
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      leading: Builder(
-        builder: (context) => IconButton(
-          icon: Icon(Icons.menu, color: textDark),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
-      actions: [
-        PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: textDark),
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-                value: 'Edit Profile', child: Text('Edit Profile')),
-            const PopupMenuDivider(),
-            const PopupMenuItem(value: 'Sign out', child: Text('Sign out')),
-          ],
-          onSelected: (value) async {
-            if (value == 'Edit Profile') {
-              if (!mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EditProfile(),
-                ),
-              );
-            } else if (value == 'Sign out') {
-              await _signOut();
-            }
-          },
-        )
-      ],
-    );
-  }
-
-  Widget _buildProfileSection(Map<String, dynamic> userData) {
-    return Row(
+  Widget _buildProfileSection(
+    Map<String, dynamic> userData,
+    Color textColor,
+    Color subtitleColor,
+  ) {
+      return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Profile Image
@@ -210,7 +171,7 @@ class _ProfileTabState extends State<ProfileTab> {
             children: [
               Text(
                 safeget(userData, 'username', fallback: 'User'),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -218,12 +179,12 @@ class _ProfileTabState extends State<ProfileTab> {
               const SizedBox(height: 4),
               Text(
                 safeget(userData, 'email', fallback: 'No Email Found'),
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: subtitleColor),
               ),
               const SizedBox(height: 8),
               Text(
                 "${safeget(userData, 'first_name')} ${safeget(userData, 'last_name')}".trim(),
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: subtitleColor),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -235,9 +196,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+                Text(
                 'Last Registered: Nov 2024',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: subtitleColor),
               ),
             ],
           ),
@@ -246,11 +207,11 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(Color textColor) {
     return Row(
       children: [
         Expanded(
-          child: Divider(color: Colors.grey, thickness: 1),
+          child: Divider(color: textColor.withOpacity(0.4), thickness: 1),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -259,36 +220,21 @@ class _ProfileTabState extends State<ProfileTab> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: textColor,
             ),
           ),
         ),
         Expanded(
-          child: Divider(color: Colors.grey, thickness: 1),
+          child: Divider(color: textColor.withOpacity(0.4), thickness: 1),
         ),
       ],
-    );
-  }
-
-  Widget _drawerItem(IconData icon, String title) {
-    return ListTile(
-      leading: Icon(icon, color: textDark),
-      title: Text(title, style: TextStyle(color: textDark)),
-      onTap: () {
-        if (title == 'About') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AboutTab()),
-          );
-        }
-      },
     );
   }
 
   // --------------------------------------------------------
   // FAVORITES VIEW — shows proposition cards vertically
   // --------------------------------------------------------
-  Widget _buildFavoritePropositionView() {
+  Widget _buildFavoritePropositionView(Color textColor, Color subtitleColor, Color cardColor,) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const SizedBox();
 
@@ -317,7 +263,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 "No favorite propositions yet.",
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey,
+                  color: subtitleColor,
                 ),
               ),
             ),
@@ -351,7 +297,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     "No favorite propositions yet.",
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: subtitleColor,
                     ),
                   ),
                 ),
@@ -359,7 +305,8 @@ class _ProfileTabState extends State<ProfileTab> {
             }
 
             return ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: props.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, i) {
@@ -379,6 +326,9 @@ class _ProfileTabState extends State<ProfileTab> {
                   fullText: fullText,
                   electionDate: electionDate,
                   propositionId: doc.id,
+                  textColor: textColor,
+                  subtitleColor: subtitleColor,
+                  cardColor: cardColor
                 );
               },
             );
@@ -397,6 +347,9 @@ class _ProfileTabState extends State<ProfileTab> {
     required String fullText,
     required String electionDate,
     required String propositionId,
+    required Color textColor,
+    required Color subtitleColor,
+    required Color cardColor,
   }) {
     return GestureDetector(
       onTap: () {
@@ -417,7 +370,7 @@ class _ProfileTabState extends State<ProfileTab> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -433,7 +386,7 @@ class _ProfileTabState extends State<ProfileTab> {
             Text(
               title,
               style: TextStyle(
-                color: textDark,
+                color: textColor,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -443,16 +396,16 @@ class _ProfileTabState extends State<ProfileTab> {
               preview,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 14, color: subtitleColor)
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 14),
+                Icon(Icons.calendar_today, size: 14, color: subtitleColor),
                 const SizedBox(width: 4),
                 Text(
                   electionDate,
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(fontSize: 14, color: subtitleColor)
                 ),
               ],
             ),

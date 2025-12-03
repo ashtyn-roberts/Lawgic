@@ -5,7 +5,8 @@ import '../screens/profile_tab.dart';
 import 'proposition_detail_screen.dart';
 import 'about_tab.dart';
 import '../screens/settings_screen.dart';
-
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -19,6 +20,7 @@ class _HomeTabState extends State<HomeTab> {
   String? userParish;
   String? userParishCode;
   bool _isLoadingUser = true;
+  bool isDarkMode = false;
 
   Color get primaryLavender => const Color(0xFFF4F0FB);
   Color get accentPurple => const Color(0xFFB48CFB);
@@ -43,10 +45,8 @@ class _HomeTabState extends State<HomeTab> {
         return;
       }
 
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final userDoc = 
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
       if (userDoc.exists) {
         final data = userDoc.data()!;
@@ -102,8 +102,23 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    // ------------------ THEME DETECTION ------------------
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    final bgColor = isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF4F0FB);
+    final cardColor = isDark ? const Color(0xFF1B1B1B) : Colors.white;
+    final drawerColor = isDark ? const Color(0xFF121212) : Colors.white;
+    final drawerDivider = isDark ? Colors.white24 : Colors.grey.withOpacity(0.3);
+
+    final drawerHeaderColor =
+        isDark ? Colors.deepPurple.withOpacity(0.25) : accentPurple.withOpacity(0.15);
+
+    final textColor = isDark ? Colors.white : textDark;
+    final subtitleColor = isDark ? Colors.white70 : Colors.grey[700];
+
     return Scaffold(
-      backgroundColor: primaryLavender,
+      backgroundColor: bgColor,
 
       // ------------------ APP BAR ------------------ 
       appBar: AppBar(
@@ -120,38 +135,14 @@ class _HomeTabState extends State<HomeTab> {
         ),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: textDark),
+            icon: Icon(Icons.menu, color: textColor),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(Icons.person_outline, color: textDark),
-            color: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'Account', child: Text('Account')),
-              const PopupMenuItem(value: 'Registration Status', child: Text('Registration Status')),
-              const PopupMenuDivider(),
-              const PopupMenuItem(value: 'Sign Out', child: Text('Sign Out')),
-            ],
-            onSelected: (value) {
-              if (value == 'Sign Out') {
-                _signOut();
-              } else if (value == 'Account') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfileTab()),
-                );
-              }
-            },
-          ),
-        ],
       ),
-
       // ------------------ DRAWER --------------------
       drawer: Drawer(
-        backgroundColor: Colors.white,
+        backgroundColor: drawerColor,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             topRight: Radius.circular(16),
@@ -162,22 +153,40 @@ class _HomeTabState extends State<HomeTab> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: accentPurple.withOpacity(0.15)),
+              decoration: BoxDecoration(color: drawerHeaderColor),
               child: Center(
                 child: Text(
                   'Menu',
                   style: TextStyle(
-                    color: textDark,
+                    color: textColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            _drawerItem(Icons.settings_outlined, 'Settings'),
-            _drawerItem(Icons.notifications_outlined, 'Notifications'),
-            _drawerItem(Icons.history, 'Recently Viewed'),
-            _drawerItem(Icons.info_outline, 'About'),
+            _drawerItem(Icons.settings_outlined, 'Settings', textColor),
+            _drawerItem(Icons.info_outline, 'About', textColor),
+
+            Divider(color: drawerDivider),
+
+            // Dark Mode Toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: ListTile(
+                leading: Icon(Icons.dark_mode, color: textColor),
+                title: Text('Dark Mode', style: TextStyle(color: textColor)),
+                trailing: Switch(
+                  value: isDark,
+                  activeColor: accentPurple,
+                  onChanged: (value) {
+                  Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                  },
+                ),
+              ),
+            ),
+
+            Divider(color: drawerDivider),
           ],
         ),
       ),
@@ -186,13 +195,13 @@ class _HomeTabState extends State<HomeTab> {
       body: _isLoadingUser
           ? const Center(child: CircularProgressIndicator())
           : userParishCode == null
-              ? _buildNoParishView()
-              : _buildPropositionsView(),
+              ? _buildNoParishView(textColor, subtitleColor)
+              : _buildPropositionsView(textColor, subtitleColor, cardColor),
     );
   }
 
   /// Show message when user doesn't have parish info
-  Widget _buildNoParishView() {
+  Widget _buildNoParishView(Color textColor, Color? subtitleColor) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -206,7 +215,7 @@ class _HomeTabState extends State<HomeTab> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: textDark,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 8),
@@ -215,7 +224,7 @@ class _HomeTabState extends State<HomeTab> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: subtitleColor,
               ),
             ),
             const SizedBox(height: 24),
@@ -226,17 +235,7 @@ class _HomeTabState extends State<HomeTab> {
                   MaterialPageRoute(builder: (context) => const ProfileTab()),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accentPurple,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Update Registration Info',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
+              child: const Text('Update Registration Info'),
             ),
           ],
         ),
@@ -245,7 +244,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   /// Main view showing ballot propositions
-  Widget _buildPropositionsView() {
+  Widget _buildPropositionsView(Color textColor, Color? subtitleColor, Color cardColor) {
     // Debug: Print what we're querying for
     debugPrint("Querying ballot_propositions for parish: $userParishCode");
     
@@ -313,7 +312,8 @@ class _HomeTabState extends State<HomeTab> {
             },
             decoration: InputDecoration(
               filled: true,
-              fillColor: Colors.white,
+              fillColor: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1B1B1B) : Colors.white,
               hintText: 'Search propositions...',
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               hintStyle: TextStyle(color: Colors.grey[600]),
@@ -333,7 +333,7 @@ class _HomeTabState extends State<HomeTab> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: textDark,
+              color: textColor,
             ),
           ),
 
@@ -446,6 +446,10 @@ class _HomeTabState extends State<HomeTab> {
                       preview: preview,
                       fullText: fullText,
                       electionDate: electionDate,
+                      cardColor: cardColor,
+                      textColor: textColor,
+                      subtitleColor: subtitleColor,
+                      onTap: () {},
                     );
                   },
                 );
@@ -464,9 +468,13 @@ class _HomeTabState extends State<HomeTab> {
     required String fullText,
     required String electionDate,
     required String propositionId,
+    Color? cardColor,
+    Color? textColor,
+    Color? subtitleColor,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap: () {
+      onTap: onTap ?? () {
         // Navigate to detail screen
         Navigator.push(
           context,
@@ -484,7 +492,7 @@ class _HomeTabState extends State<HomeTab> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor ?? Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -520,7 +528,7 @@ class _HomeTabState extends State<HomeTab> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: textDark,
+                        color: textColor ?? Colors.black,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -530,7 +538,7 @@ class _HomeTabState extends State<HomeTab> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: subtitleColor ?? Colors.grey[700],
                         height: 1.4,
                       ),
                     ),
@@ -538,13 +546,13 @@ class _HomeTabState extends State<HomeTab> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                          Icon(Icons.calendar_today, size: 14, color: subtitleColor ?? Colors.grey),
                           const SizedBox(width: 4),
                           Text(
                             electionDate,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: subtitleColor ?? Colors.grey,
                             ),
                           ),
                         ],
@@ -560,7 +568,7 @@ class _HomeTabState extends State<HomeTab> {
               child: Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Colors.grey[400],
+                color: subtitleColor ?? Colors.grey,
               ),
             ),
           ],
@@ -569,10 +577,10 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _drawerItem(IconData icon, String title) {
+  Widget _drawerItem(IconData icon, String title, Color textColor) {
     return ListTile(
-      leading: Icon(icon, color: textDark),
-      title: Text(title, style: TextStyle(color: textDark)),
+      leading: Icon(icon, color: textColor),
+      title: Text(title, style: TextStyle(color: textColor)),
       onTap: () {
         Navigator.pop(context); // close drawer first
 
@@ -582,21 +590,6 @@ class _HomeTabState extends State<HomeTab> {
           MaterialPageRoute(builder: (context) => const SettingsScreen()),
         );
       }
-
-      /*if (title == 'Notifications') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-        );
-      }
-
-      if (title == 'Recently Viewed') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const RecentlyViewedScreen()),
-        );
-      }*/
-
         if (title == 'About') {
           Navigator.push(
             context,
