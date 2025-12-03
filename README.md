@@ -2,6 +2,13 @@
 
 Lawgic — Civic Engagement Mobile App
 
+Participants:
+- Ashtyn Roberts
+- Lillian Andino
+- D'marrick Guillory
+- Cole Latiolais
+- Logan Wachter
+
 Lawgic is a Flutter-based mobile application designed to help citizens understand ballot propositions, stay informed on upcoming elections, read simplified summaries of legislation, and interact with their community through comments and notes.
 It also includes an integrated AI Assistant powered by Google Gemini to answer civic questions.
 
