@@ -4,6 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'about_tab.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class MapTab extends StatefulWidget {
   const MapTab({super.key});
@@ -158,8 +160,21 @@ class _MapTabState extends State<MapTab> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
+    final bgColor = isDark ? const Color(0xFF0F0F0F) : primaryLavender;
+    final drawerColor = isDark ? const Color(0xFF121212) : Colors.white;
+    final drawerHeaderColor =
+        isDark ? Colors.deepPurple.withOpacity(0.25) : accentPurple.withOpacity(0.15);
+    final textColor = isDark ? Colors.white : textDark;
+    final subtitleColor = isDark ? Colors.white70 : Colors.black87;
+    final cardColor = isDark ? const Color(0xFF1B1B1B) : Colors.white;
+    final borderColor = isDark ? Colors.white24 : Colors.black;
+    final borderSoft = isDark ? Colors.white24 : Colors.blueGrey.shade200;
+
     return Scaffold(
-      backgroundColor: primaryLavender,
+      backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: primaryLavender,
         elevation: 0,
@@ -167,20 +182,20 @@ class _MapTabState extends State<MapTab> {
         title: Text(
           'Lawgic',
           style: TextStyle(
-            color: textDark,
+            color: textColor,
             fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
         ),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: textDark),
+            icon: Icon(Icons.menu, color: textColor),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: textDark),
+            icon: Icon(Icons.refresh, color: textColor),
             onPressed: _loadVoterInfo,
             tooltip: 'Refresh voter info',
           ),
@@ -188,7 +203,7 @@ class _MapTabState extends State<MapTab> {
       ),
 
       drawer: Drawer(
-        backgroundColor: Colors.white,
+        backgroundColor: drawerColor,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             topRight: Radius.circular(16),
@@ -199,22 +214,22 @@ class _MapTabState extends State<MapTab> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: accentPurple.withOpacity(0.15)),
+              decoration: BoxDecoration(color: drawerHeaderColor),
               child: Center(
                 child: Text(
                   'Menu',
                   style: TextStyle(
-                    color: textDark,
+                    color: textColor,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            _drawerItem(Icons.settings_outlined, 'Settings'),
-            _drawerItem(Icons.notifications_outlined, 'Notifications'),
-            _drawerItem(Icons.history, 'Recently Viewed'),
-            _drawerItem(Icons.info_outline, 'About'),
+            _drawerItem(Icons.settings_outlined, 'Settings', textColor),
+            _drawerItem(Icons.notifications_outlined, 'Notifications', textColor),
+            _drawerItem(Icons.history, 'Recently Viewed', textColor),
+            _drawerItem(Icons.info_outline, 'About', textColor),
           ],
         ),
       ),
@@ -230,7 +245,7 @@ class _MapTabState extends State<MapTab> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black, width: 2),
+                      border: Border.all(color: borderColor, width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ClipRRect(
@@ -313,9 +328,9 @@ class _MapTabState extends State<MapTab> {
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black),
+                border: Border.all(color: borderColor),
               ),
               child: _isLoadingVoterInfo
                   ? const SizedBox(
@@ -327,16 +342,16 @@ class _MapTabState extends State<MapTab> {
                       ? Text(
                           _errorMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 14, color: Colors.black87),
+                          style: TextStyle(fontSize: 14, color: subtitleColor),
                         )
                       : Text(
                           _voterWard != null 
                               ? 'Your voting ward: $_voterWard'
                               : 'Ward information not available',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
-                            color: Colors.black,
+                            color: textColor,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -349,9 +364,9 @@ class _MapTabState extends State<MapTab> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.blueGrey.shade200),
+                border: Border.all(color: borderSoft),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
@@ -366,29 +381,29 @@ class _MapTabState extends State<MapTab> {
                       ? Center(
                           child: Text(
                             'Voting location not available',
-                            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                            style: TextStyle(fontSize: 16, color: subtitleColor),
                           ),
                         )
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Your Voting Location:',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor,),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               _votingLocationName ?? 'Not available',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.black87,
+                                color: textColor,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               _votingLocationAddress ?? '',
-                              style: const TextStyle(fontSize: 16, color: Colors.black87),
+                              style: TextStyle(fontSize: 16, color: subtitleColor),
                             ),
                           ],
                         ),
@@ -399,10 +414,10 @@ class _MapTabState extends State<MapTab> {
     );
   }
 
-  Widget _drawerItem(IconData icon, String title) {
+  Widget _drawerItem(IconData icon, String title, Color textColor) {
     return ListTile(
-      leading: Icon(icon, color: textDark),
-      title: Text(title, style: TextStyle(color: textDark)),
+      leading: Icon(icon, color: textColor),
+      title: Text(title, style: TextStyle(color: textColor)),
       onTap: () {
         if (title == 'About') {
           Navigator.push(

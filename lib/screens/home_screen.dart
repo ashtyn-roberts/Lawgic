@@ -15,13 +15,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   
-
-  static const List<Widget> _screens = [
-    HomeTab(),
-    CalendarTab(),
-    MapTab(),
-    AIChatScreen(),
-    ProfileTab(),
+  final List<Widget> _screens = [
+    const HomeTab(),
+    const CalendarTab(),
+    const MapTab(),
+    const AIChatScreen(),
+    const ProfileTab(),   // CHANGE: safe
   ];
 
   void _onItemTapped(int index) {
