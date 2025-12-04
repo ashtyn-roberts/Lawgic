@@ -110,7 +110,7 @@ class _CalendarTabState extends State<CalendarTab> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-fixprofile
+            //fixprofile
             color: primaryColor.withAlpha(26),
 
             width: double.infinity,
@@ -277,7 +277,7 @@ fixprofile
                     ),
                   ],
                 ),
-fixprofile
+                //fixprofile
                 // Ensure text colors are legible
                 defaultTextStyle: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
