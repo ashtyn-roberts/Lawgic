@@ -1,5 +1,5 @@
 """
-Complete Voter Info Fetcher
+Complete Voter Info Fetcher - Windows Compatible
 Fetches voter information AND voting location, updates Firestore
 """
 
@@ -13,9 +13,9 @@ try:
     cred = credentials.Certificate("firebase_config.json")
     firebase_admin.initialize_app(cred)
     db = firestore.client()
-    print("✅ Firebase initialized")
+    print("[OK] Firebase initialized")
 except Exception as e:
-    print(f"❌ Error initializing Firebase: {e}")
+    print(f"[ERROR] Error initializing Firebase: {e}")
     print("Make sure firebase_config.json is in the current directory")
     sys.exit(1)
 
@@ -35,7 +35,7 @@ def fetch_and_save_complete_info(user_id: str, first_name: str, last_name: str,
     print("="*60 + "\n")
     
     # Fetch voter info + location
-    print("🔍 Scraping Louisiana SOS voter portal...")
+    print("[INFO] Scraping Louisiana SOS voter portal...")
     result = get_complete_voter_info(
         first_name=first_name,
         last_name=last_name,
@@ -45,29 +45,37 @@ def fetch_and_save_complete_info(user_id: str, first_name: str, last_name: str,
         headless=True  # Set to False to see browser
     )
     
-    if not result.get('success'):
-        print(f"\n❌ Error: {result.get('error')}")
+    # Debug: Show what was returned
+    print(f"\n[DEBUG] Scraper returned {len(result)} fields:")
+    for key in result.keys():
+        print(f"  - {key}: {result[key]}")
+    
+    # Check if we got data (either success=True or has parish/status fields)
+    has_data = (result.get('success') == True) or result.get('parish') or result.get('status')
+    
+    if not has_data:
+        print(f"\n[ERROR] Error: {result.get('error', 'Unknown error - no data returned')}")
         return False
     
     # Display results
-    print("\n✅ Voter information found!")
-    print("\n📋 Voter Registration:")
+    print("\n[SUCCESS] Voter information found!")
+    print("\nVoter Registration:")
     print(f"  Status: {result.get('status', 'N/A')}")
     print(f"  Parish: {result.get('parish', 'N/A')}")
     print(f"  Ward/Precinct: {result.get('ward_precinct', 'N/A')}")
     print(f"  Party: {result.get('party', 'N/A')}")
     
     if result.get('voting_location_name') or result.get('voting_location_address'):
-        print("\n📍 Voting Location:")
+        print("\nVoting Location:")
         if result.get('voting_location_name'):
             print(f"  Name: {result['voting_location_name']}")
         if result.get('voting_location_address'):
             print(f"  Address: {result['voting_location_address']}")
     else:
-        print("\n📍 Voting Location: Not found")
+        print("\nVoting Location: Not found")
     
     # Update Firestore
-    print("\n📝 Updating Firestore...")
+    print("\n[INFO] Updating Firestore...")
     try:
         update_data = {}
         
@@ -94,7 +102,7 @@ def fetch_and_save_complete_info(user_id: str, first_name: str, last_name: str,
         
         # Save to Firestore
         db.collection('users').document(user_id).update(update_data)
-        print("✅ Firestore updated successfully!")
+        print("[SUCCESS] Firestore updated successfully!")
         
         print("\n" + "="*60)
         print("DONE! User's voter information has been saved.")
@@ -104,33 +112,22 @@ def fetch_and_save_complete_info(user_id: str, first_name: str, last_name: str,
             if key != 'voter_info_updated_at':
                 print(f"  {key}: {value}")
         
-        print("\nNext steps:")
-        print("1. Open your Flutter app")
-        print("2. Log in with this user account")  
-        print("3. Go to the Map tab")
-        print("4. You should see:")
-        print(f"   - Ward: {result.get('ward_precinct', 'N/A')}")
-        if result.get('voting_location_name'):
-            print(f"   - Location: {result['voting_location_name']}")
-        if result.get('voting_location_address'):
-            print(f"   - Address: {result['voting_location_address']}")
-        
         return True
         
     except Exception as e:
-        print(f"❌ Error updating Firestore: {e}")
+        print(f"[ERROR] Error updating Firestore: {e}")
         return False
 
 
 def fetch_from_firestore(user_id: str):
     """Get user data from Firestore and fetch complete voter info"""
-    print(f"📖 Reading user data from Firestore for: {user_id}")
+    print(f"[INFO] Reading user data from Firestore for: {user_id}")
     
     try:
         user_doc = db.collection('users').document(user_id).get()
         
         if not user_doc.exists:
-            print(f"❌ User document not found: {user_id}")
+            print(f"[ERROR] User document not found: {user_id}")
             return False
         
         user_data = user_doc.to_dict()
@@ -140,7 +137,7 @@ def fetch_from_firestore(user_id: str):
         missing_fields = [f for f in required_fields if f not in user_data]
         
         if missing_fields:
-            print(f"❌ User is missing required fields: {', '.join(missing_fields)}")
+            print(f"[ERROR] User is missing required fields: {', '.join(missing_fields)}")
             print("User needs to have: first_name, last_name, zip_code, birth_month, birth_year")
             return False
         
@@ -155,7 +152,7 @@ def fetch_from_firestore(user_id: str):
         )
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] Error: {e}")
         return False
 
 
@@ -168,7 +165,7 @@ def interactive_mode():
     
     user_id = input("Firebase User ID (get from Firebase Console): ").strip()
     if not user_id:
-        print("❌ User ID is required")
+        print("[ERROR] User ID is required")
         return
     
     # Check if it should fetch from Firestore
@@ -190,9 +187,11 @@ def interactive_mode():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        # Command line mode
+        # Command line mode - automatically fetch from Firestore
         user_id = sys.argv[1]
-        fetch_from_firestore(user_id)
+        print(f"[INFO] Fetching voter info for user: {user_id}\n")
+        success = fetch_from_firestore(user_id)
+        sys.exit(0 if success else 1)
     else:
         # Interactive mode
         interactive_mode()

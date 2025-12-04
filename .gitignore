@@ -73,3 +73,8 @@ voting_location_page.png
 voter_results_page.png
 error_response.html
 success_response.html
+
+# Ignore real API keys
+lib/config/api_keys.dart
+api_keys.dart
+**/api_keys.dart
