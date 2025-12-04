@@ -206,13 +206,18 @@ def scrape_parish_for_election(parish_name: str, election_date: str):
 
         link_elements = []
         for a in soup.find_all("a", href=True):
-            txt = a.get_text(strip=True)
-            if txt and (("Proposition" in txt) or ("Proposed" in txt) or 
-                       ("Parish" in txt) or ("Fire" in txt) or ("School" in txt)):
-                href = a["href"]
-                if "javascript" in href.lower():
-                    continue
-                link_elements.append((txt, href))
+            href = a["href"]
+            
+            # Skip javascript and external links
+            if "javascript" in href.lower():
+                continue
+            
+            # Look for links to proposition detail pages
+            # The SOS website uses /PropositionText/PropositionText/Detail?referendumId=
+            if "/PropositionText/Detail" in href or "/Detail?referendumId=" in href:
+                txt = a.get_text(strip=True)
+                if txt:  # Only add if there's actual text
+                    link_elements.append((txt, href))
 
         # Deduplicate
         seen = set()
