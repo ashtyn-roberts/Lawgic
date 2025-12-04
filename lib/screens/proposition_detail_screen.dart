@@ -10,7 +10,10 @@ class PropositionDetailScreen extends StatefulWidget {
   final String fullText;
   final String electionDate;
   final String parish;
-
+  final String? aiSummary;
+  final String? keyPoints;
+  final String? aiYesVote;
+  final String? aiNoVote;
 
   const PropositionDetailScreen({
     super.key,
@@ -19,7 +22,10 @@ class PropositionDetailScreen extends StatefulWidget {
     required this.fullText,
     required this.electionDate,
     required this.parish,
-
+    this.aiSummary,
+    this.keyPoints,
+    this.aiYesVote,
+    this.aiNoVote,
   });
 
   @override
@@ -85,21 +91,19 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = Theme.of(context).scaffoldBackgroundColor;
-    
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: primaryLavender,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        backgroundColor: primaryLavender,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyLarge!.color),
+          icon: Icon(Icons.arrow_back, color: textDark),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Proposition Details',
           style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge!.color,
+            color: textDark,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
@@ -107,7 +111,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
         bottom: TabBar(
           controller: _tabController,
           labelColor: accentPurple,
-          unselectedLabelColor: Theme.of(context).hintColor,
+          unselectedLabelColor: Colors.grey,
           indicatorColor: accentPurple,
           tabs: const [
             Tab(text: 'Details'),
@@ -133,11 +137,6 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
   }
 
   Widget _buildDetailsTab() {
-    final textColor = Theme.of(context).textTheme.bodyLarge!.color;
-    final subtitleColor = Theme.of(context).textTheme.bodyMedium!.color;
-    
-    final cardColor = Theme.of(context).cardColor;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -147,7 +146,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: cardColor,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -165,7 +164,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: textColor,
+                    color: textDark,
                     height: 1.3,
                   ),
                 ),
@@ -178,7 +177,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                       'Election: ${widget.electionDate}',
                       style: TextStyle(
                         fontSize: 14,
-                        color: subtitleColor,
+                        color: Colors.grey[700],
                       ),
                     ),
                   ],
@@ -193,7 +192,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                         widget.parish,
                         style: TextStyle(
                           fontSize: 14,
-                          color: subtitleColor,
+                          color: Colors.grey[700],
                         ),
                       ),
                     ),
@@ -203,32 +202,206 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
             ),
           ),
 
-          
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
+          // Favorite Button
           Center(
-  child: ElevatedButton.icon(
-    onPressed: _toggleFavorite,
-    icon: Icon(
-      _isFavorite ? Icons.favorite : Icons.favorite_border,
-      color: Colors.white,
-    ),
-    label: Text(_isFavorite ? 'Remove from Favorites' : 'Add to Favorites'),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: accentPurple,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-  ),
-),
+            child: ElevatedButton.icon(
+              onPressed: _toggleFavorite,
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: Colors.white,
+              ),
+              label: Text(_isFavorite ? 'Remove from Favorites' : 'Add to Favorites'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // AI Summary Card (if available)
+          if (widget.aiSummary != null || widget.keyPoints != null || 
+              widget.aiYesVote != null || widget.aiNoVote != null)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [accentPurple.withOpacity(0.1), primaryLavender],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: accentPurple.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: accentPurple, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'AI Summary',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  if (widget.aiSummary != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.aiSummary!,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.5,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ],
+                  
+                  // Key Points
+                  if (widget.keyPoints != null && widget.keyPoints!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Key Points:',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.keyPoints!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                  
+                  // YES/NO Vote Sections
+                  if (widget.aiYesVote != null || widget.aiNoVote != null) ...[
+                    const SizedBox(height: 20),
+                    
+                    // YES Vote
+                    if (widget.aiYesVote != null) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'YES Vote:',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.aiYesVote!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    
+                    if (widget.aiYesVote != null && widget.aiNoVote != null)
+                      const SizedBox(height: 16),
+                    
+                    // NO Vote
+                    if (widget.aiNoVote != null) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.cancel,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'NO Vote:',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.aiNoVote!,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 20),
 
           // Full Text Card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: cardColor,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -250,7 +423,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: textDark,
                       ),
                     ),
                   ],
@@ -261,7 +434,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                   style: TextStyle(
                     fontSize: 16,
                     height: 1.6,
-                    color: textColor,
+                    color: Colors.grey[800],
                   ),
                 ),
               ],
@@ -274,7 +447,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: cardColor,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -296,7 +469,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: textDark,
                       ),
                     ),
                   ],
@@ -305,8 +478,8 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _sentimentIndicator('For', 65, Colors.green, textColor, subtitleColor),
-                    _sentimentIndicator('Against', 35, Colors.red, textColor, subtitleColor),
+                    _sentimentIndicator('For', 65, Colors.green),
+                    _sentimentIndicator('Against', 35, Colors.red),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -315,7 +488,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
                     'Based on community comments',
                     style: TextStyle(
                       fontSize: 12,
-                      color: subtitleColor,
+                      color: Colors.grey[600],
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -328,7 +501,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
     );
   }
 
-  Widget _sentimentIndicator(String label, int percentage, Color progressColor, Color? textColor, Color? subtitleColor,) {
+  Widget _sentimentIndicator(String label, int percentage, Color color) {
     return Column(
       children: [
         Stack(
@@ -340,8 +513,8 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
               child: CircularProgressIndicator(
                 value: percentage / 100,
                 strokeWidth: 8,
-                backgroundColor: Theme.of(context).dividerColor,
-                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
             Text(
@@ -349,7 +522,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: textColor,
+                color: textDark,
               ),
             ),
           ],
@@ -360,7 +533,7 @@ class _PropositionDetailScreenState extends State<PropositionDetailScreen>
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: subtitleColor,
+            color: Colors.grey[700],
           ),
         ),
       ],
