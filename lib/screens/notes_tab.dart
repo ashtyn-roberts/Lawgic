@@ -28,14 +28,37 @@ class _NotesTabState extends State<NotesTab> {
           .collection('user_notes')
           .where('proposition_id', isEqualTo: widget.propositionId)
           .where('user_id', isEqualTo: user.uid)
-          .orderBy('timestamp', descending: true)
+          // Removed orderBy to avoid composite index requirement
+          // Notes will appear in the order they were added
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
+        if (snapshot.hasError) {
+          debugPrint('Notes error: ${snapshot.error}');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Error loading notes: ${snapshot.error}'),
+              ],
+            ),
+          );
+        }
+
         final notes = snapshot.hasData ? snapshot.data!.docs : [];
+
+        // Sort notes by timestamp in memory (newest first)
+        notes.sort((a, b) {
+          final aTime = a['timestamp'] as Timestamp?;
+          final bTime = b['timestamp'] as Timestamp?;
+          if (aTime == null || bTime == null) return 0;
+          return bTime.compareTo(aTime);
+        });
 
         return Column(
           children: [
@@ -214,26 +237,28 @@ class _NotesTabState extends State<NotesTab> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('New Note'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'Note title',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  hintText: 'Note title',
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: contentController,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                hintText: 'Your thoughts...',
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'Content',
+                  hintText: 'Your thoughts...',
+                ),
+                maxLines: 4,
               ),
-              maxLines: 4,
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -263,24 +288,26 @@ class _NotesTabState extends State<NotesTab> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Note'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: contentController,
-              decoration: const InputDecoration(
-                labelText: 'Content',
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'Content',
+                ),
+                maxLines: 4,
               ),
-              maxLines: 4,
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -339,8 +366,22 @@ class _NotesTabState extends State<NotesTab> {
         'content': content,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note saved successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Error saving note: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving note: $e')),
+        );
+      }
     }
   }
 
@@ -351,16 +392,44 @@ class _NotesTabState extends State<NotesTab> {
         'content': content,
         'updated_at': FieldValue.serverTimestamp(),
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note updated successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Error updating note: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating note: $e')),
+        );
+      }
     }
   }
 
   Future<void> _deleteNote(String noteId) async {
     try {
       await FirebaseFirestore.instance.collection('user_notes').doc(noteId).delete();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note deleted'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Error deleting note: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting note: $e')),
+        );
+      }
     }
   }
 }

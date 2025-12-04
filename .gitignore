@@ -78,3 +78,6 @@ success_response.html
 lib/config/api_keys.dart
 api_keys.dart
 **/api_keys.dart
+config_key.py
+lawgic_backend/config_key.py
+**/config_key.py
