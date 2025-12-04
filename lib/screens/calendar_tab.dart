@@ -10,6 +10,7 @@ class CalendarTab extends StatefulWidget {
 }
 
 class _CalendarTabState extends State<CalendarTab> {
+  // State variables for the calendar
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -19,21 +20,23 @@ class _CalendarTabState extends State<CalendarTab> {
 
   // 1. DUMMY EVENT DATA
   // Keys are DateTime objects stripped of time (using UTC)
+  // This map should be managed by a state management solution in a real app.
   final Map<DateTime, List<String>> _events = {
-    DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day):
-        ['CSC 4330 Presentation :)', 'Sprint Retrospective'],
-    DateTime.utc(2025, 10, 10): ['Adore Professor Fronchetti from afar'],
-    DateTime.utc(2025, 10, 15): [
-      'Rub Pibbles Belly',
-      'Read One Piece Spoilers',
+    DateTime.utc(2025, 12, 9): [
+      'S.B. 1007: The Digital Privacy Restoration Act',
     ],
-    DateTime.utc(2025, 10, 25): ['Goon Circle'],
+    DateTime.utc(2025, 12, 16): ['H.R. 452: The National Infrastructure Bond'],
+    DateTime.utc(2025, 12, 21): [
+      'S.J. Res. 3: The Term Limits Amendment',
+      'H.R. 611: The Winter Relief Economic Stimulus',
+    ],
   };
 
   @override
   void initState() {
     super.initState();
     // Initialize selected day to today and load its events
+    // Ensure _focusedDay is normalized for comparison/lookup if using _getEventsForDay later.
     _selectedDay = _focusedDay;
     _selectedEvents = _getEventsForDay(_focusedDay);
   }
@@ -62,9 +65,39 @@ class _CalendarTabState extends State<CalendarTab> {
     }
   }
 
+  // --- New: Handler for Add Event Button ---
+  void _addEvent() {
+    // In a real application, you would navigate to an "Add Event" screen
+    // or show a dialog here.
+    final selectedDate = _selectedDay;
+    if (selectedDate != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Adding event for ${DateFormat.yMd().format(selectedDate)}",
+          ),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+      debugPrint('Add event dialog/screen opened for ${selectedDate}');
+    } else {
+      // Should not happen since _selectedDay is initialized to DateTime.now()
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select a day first."),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+  // ----------------------------------------
+
   // Renamed to build the event list section
   Widget _buildEventList(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    // Use theme colors
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
+    final onSurfaceColor = colorScheme.onSurface;
 
     // Header showing the selected date (or a placeholder if null, though it shouldn't be null now)
     final dateText = _selectedDay == null
@@ -77,7 +110,9 @@ class _CalendarTabState extends State<CalendarTab> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+fixprofile
             color: primaryColor.withAlpha(26),
+
             width: double.infinity,
             child: Text(
               dateText,
@@ -95,7 +130,7 @@ class _CalendarTabState extends State<CalendarTab> {
                 ? Center(
                     child: Text(
                       "No scheduled events for this date.",
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: onSurfaceColor.withOpacity(0.6)),
                     ),
                   )
                 : ListView.builder(
@@ -108,7 +143,10 @@ class _CalendarTabState extends State<CalendarTab> {
                           vertical: 4.0,
                         ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: primaryColor.withAlpha(50)),
+                          // Use a light border color from the theme
+                          border: Border.all(
+                            color: onSurfaceColor.withOpacity(0.1),
+                          ),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         child: ListTile(
@@ -117,11 +155,14 @@ class _CalendarTabState extends State<CalendarTab> {
                             size: 10,
                             color: primaryColor,
                           ),
-                          title: Text(eventTitle),
-                          trailing: const Icon(
+                          title: Text(
+                            eventTitle,
+                            style: TextStyle(color: onSurfaceColor),
+                          ),
+                          trailing: Icon(
                             Icons.arrow_forward_ios,
                             size: 16,
-                            color: Colors.grey,
+                            color: onSurfaceColor.withOpacity(0.4),
                           ),
                           onTap: () {
                             // Handle event tap (e.g., navigate to event details screen)
@@ -139,16 +180,34 @@ class _CalendarTabState extends State<CalendarTab> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    // Get the color scheme from the theme
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
+    final onPrimaryColor = colorScheme.onPrimary;
+    final secondaryColor = colorScheme.secondary; // Useful for the event marker
+    final onSurfaceColor = colorScheme.onSurface;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Calendar View"),
         centerTitle: true,
+        // Use primary and onPrimary colors from the theme
         backgroundColor: primaryColor,
-        foregroundColor: Colors.white, // Text/icon color
+        foregroundColor: onPrimaryColor, // Text/icon color
         elevation: 4,
       ),
+      // --- New: Floating Action Button for Add Event ---
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addEvent,
+        label: const Text('Add Event'),
+        icon: const Icon(Icons.add_circle_outline),
+        backgroundColor: primaryColor,
+        foregroundColor: onPrimaryColor,
+        // Ensure the button is only visible when a day is selected
+        tooltip: 'Add a new event',
+      ),
+      // ------------------------------------------------
+
       // The body now contains both the calendar and the event list
       body: Column(
         children: [
@@ -182,26 +241,43 @@ class _CalendarTabState extends State<CalendarTab> {
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: BoxDecoration(
-                  // Replaced .withOpacity(0.05) -> .withAlpha(13) (5% opacity)
-                  color: primaryColor.withAlpha(13),
+                  // Use primary color with opacity
+                  color: primaryColor.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
+                ),
+                // Use primary color for the format button text
+                formatButtonTextStyle: TextStyle(color: onPrimaryColor),
+                // Use primary color for the format button border/background
+                formatButtonDecoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
               ),
               calendarStyle: CalendarStyle(
                 isTodayHighlighted: true,
+                // Use accent/secondary color for today's decoration
                 todayDecoration: BoxDecoration(
-                  // Replaced .withOpacity(0.4) -> .withAlpha(102) (40% opacity)
-                  color: primaryColor.withAlpha(102),
+                  color: secondaryColor.withOpacity(0.6),
                   shape: BoxShape.circle,
                 ),
+                // Use primary color for the selected day
                 selectedDecoration: BoxDecoration(
                   color: primaryColor,
                   shape: BoxShape.circle,
                 ),
+                // Use primary color for the event marker
                 markerDecoration: BoxDecoration(
                   color: primaryColor,
                   shape: BoxShape.circle,
+                  // Reduce marker size
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.3),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
+fixprofile
                 // Ensure text colors are legible
                 defaultTextStyle: TextStyle(
                   color: Theme.of(context).brightness == Brightness.dark
@@ -211,16 +287,17 @@ class _CalendarTabState extends State<CalendarTab> {
                 weekendTextStyle: const TextStyle(color: Colors.redAccent),
                 todayTextStyle: const TextStyle(color: Colors.white),
                 selectedTextStyle: const TextStyle(color: Colors.white),
+
               ),
             ),
           ),
 
-          // The new event list takes up the remaining vertical space
+          const Divider(height: 1),
+
+          // The event list takes up the remaining vertical space
           _buildEventList(context),
         ],
       ),
-      // bottomNavigationBar is removed to allow the event list to take up space
-      // bottomNavigationBar: _buildSelectedDateFooter(),
     );
   }
 }
