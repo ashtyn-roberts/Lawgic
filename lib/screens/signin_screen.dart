@@ -60,6 +60,43 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
+  // Forgot Password Function
+  Future<void> _resetPassword() async {
+  final email = _emailController.text.trim();
+
+  if (email.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please enter your email first.')),
+    );
+    return;
+  }
+
+  try {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Password reset email sent! Check your inbox.'),
+      ),
+    );
+  } on FirebaseAuthException catch (e) {
+    String message;
+
+    if (e.code == 'user-not-found') {
+      message = 'No account found with that email.';
+    } else if (e.code == 'invalid-email') {
+      message = 'Invalid email address.';
+    } else {
+      message = 'Error: ${e.message}';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+}
+
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -117,18 +154,17 @@ class _SignInScreenState extends State<SignInScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password reset functionality is not yet implemented.')),
-                    );
-                  },
-                  child: const Text(
-                    'Forgot password?',
-                    style: TextStyle(color: Color(0xFF1E88E5), fontWeight: FontWeight.w600),
+                  onPressed: _resetPassword,
+                    child: const Text(
+                      'Forgot password?',
+                      style: TextStyle(
+                        color: Color(0xFF1E88E5),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
               // error message
               if (_errorMessage != null)
