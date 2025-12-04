@@ -77,7 +77,6 @@ class _CalendarTabState extends State<CalendarTab> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            // Replaced .withOpacity(0.1) -> .withAlpha(26) (10% opacity)
             color: primaryColor.withAlpha(26),
             width: double.infinity,
             child: Text(
@@ -204,7 +203,11 @@ class _CalendarTabState extends State<CalendarTab> {
                   shape: BoxShape.circle,
                 ),
                 // Ensure text colors are legible
-                defaultTextStyle: const TextStyle(color: Colors.black87),
+                defaultTextStyle: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                  ? Color(0xFFB48CFB)   // neon purple
+                  : Colors.black87,
+                ),
                 weekendTextStyle: const TextStyle(color: Colors.redAccent),
                 todayTextStyle: const TextStyle(color: Colors.white),
                 selectedTextStyle: const TextStyle(color: Colors.white),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lawgic/screens/editprofile_screen.dart';
 import '../screens/profile_tab.dart';
 import 'proposition_detail_screen.dart';
 import 'about_tab.dart';
@@ -233,7 +234,7 @@ class _HomeTabState extends State<HomeTab> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileTab()),
+                  MaterialPageRoute(builder: (context) => const EditProfile()),
                 );
               },
               child: const Text('Update Registration Info'),
