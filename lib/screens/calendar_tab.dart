@@ -110,8 +110,9 @@ class _CalendarTabState extends State<CalendarTab> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            // Use primary color with opacity
-            color: primaryColor.withOpacity(0.1),
+fixprofile
+            color: primaryColor.withAlpha(26),
+
             width: double.infinity,
             child: Text(
               dateText,
@@ -276,14 +277,17 @@ class _CalendarTabState extends State<CalendarTab> {
                     ),
                   ],
                 ),
-                // Use onSurface for default text
-                defaultTextStyle: TextStyle(color: onSurfaceColor),
-                // Use Theme's error or a custom color for weekend
-                weekendTextStyle: TextStyle(color: colorScheme.error),
-                // Today's text should be legible against the todayDecoration (secondary color)
-                todayTextStyle: TextStyle(color: colorScheme.onSecondary),
-                // Selected text should be legible against the selectedDecoration (primary color)
-                selectedTextStyle: TextStyle(color: onPrimaryColor),
+fixprofile
+                // Ensure text colors are legible
+                defaultTextStyle: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                  ? Color(0xFFB48CFB)   // neon purple
+                  : Colors.black87,
+                ),
+                weekendTextStyle: const TextStyle(color: Colors.redAccent),
+                todayTextStyle: const TextStyle(color: Colors.white),
+                selectedTextStyle: const TextStyle(color: Colors.white),
+
               ),
             ),
           ),
